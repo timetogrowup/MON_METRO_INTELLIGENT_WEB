@@ -1,14 +1,12 @@
-# Mon Métro Intelligent — version expérimentale
+# wenare
 
-Application : https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/
+Application de transport en Île-de-France : comprendre son trajet et, à terme, consulter les prochains passages à une station ou un arrêt.
 
-Cliquez « Installer / actualiser les données ». Interface et données disponibles hors connexion après installation ; services datés à actualiser avant une nouvelle journée.
+[Ouvrir wenare](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
 
-Base dérivée IDFM/GTFS : 321 stations parentes, 16 lignes, 108 parcours, 2133 tronçons dirigés au 03/11/2026. Provenance et empreintes : distribution/manifest.json. Sources : https://transport.data.gouv.fr/resources/80921 et https://data.iledefrance-mobilites.fr/explore/dataset/arrets-lignes/ . Attribution : Île-de-France Mobilités ; licence ODbL https://opendatacommons.org/licenses/odbl/1-0/ .
+## Version disponible
+Référentiel et moteur métro, synthèse de trajet, GPS et choix manuel. Les diagnostics et simulations sont facultatifs. La reconnaissance nécessite encore une qualification physique.
 
-GPS traité localement. Une proximité ou une progression ne prouve pas une présence en rame. En tunnel, position indéterminée possible. Choix manuel disponible, aucun horaire PRIM connecté. Recettes Chromium et WebKit automatisées réussies ; validation terrain et sur iPhone physique encore nécessaires. Voir CONFIDENTIALITE.md.
+Les prochains passages temps réel et les autres modes sont à développer ; ils ne sont pas connectés dans cette version. Aucun horaire fictif n'est fourni comme information réelle.
 
-L'ancien cache de 803 associations est conservé dans une base distincte. La collecte maître est quotidienne ; une tâche Work est programmée chaque matin autour de 08:00 Europe/Paris pour publier uniquement les données validées. Premier passage planifié à observer.
-
-## Vue voyageur
-L'écran principal présente le trajet : ligne, direction, position estimée et prochaine station, avec l'incertitude affichée. Le choix manuel est accessible dans « Indiquer ou corriger mon trajet ». Les simulations, anciens résultats de proximité, coordonnées, journaux et gestion avancée restent dans « Tests, démonstrations et diagnostics », fermé par défaut. Choisir un parcours de démonstration ne coupe pas le GPS ; lancer une simulation arrête le suivi réel.
+Le nom du produit est wenare. L'adresse, les identifiants techniques et le stockage local restent conservés. Voir [Confidentialité](CONFIDENTIALITE.md).
