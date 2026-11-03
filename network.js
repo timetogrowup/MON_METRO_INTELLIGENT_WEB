@@ -23,6 +23,6 @@ async function update(base='./distribution/'){
  const bytes=await payload.arrayBuffer(),data=await validate(bytes,m),record={manifest:m,data,bytes};await save(record,current);return record;
 }
 function currentDay(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
-function describe(record){if(!record)return 'Aucun réseau versionné installé.';const c=record.manifest.counts;return (record.recovered?'Version précédente restaurée après corruption · ':'')+c.stations+' stations · '+c.lines+' lignes · services du '+record.data.service_date+(record.data.service_date===currentDay()?'':' · référentiel daté : actualisation nécessaire avant reconnaissance automatique')}
+function describe(record){if(!record)return 'Les données du métro sont à installer sur cet appareil.';const c=record.manifest.counts;return (record.recovered?'Version précédente restaurée après corruption · ':'')+c.stations+' stations · '+c.lines+' lignes · services du '+record.data.service_date+(record.data.service_date===currentDay()?'':' · actualisez les données pour poursuivre la localisation')}
 global.MMIReference={read,update,rollback,validate,describe,currentDay};
 })(typeof window==='undefined'?globalThis:window);
