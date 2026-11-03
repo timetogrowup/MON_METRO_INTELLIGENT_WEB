@@ -10,11 +10,11 @@ button.secondary{background:#e4ebf5;color:#102846}button:focus-visible,select:fo
 .muted{color:#526579}.pill{display:inline-block;background:#e6f0fb;border-radius:99px;padding:5px 10px;font-size:.85rem}
 .big{font-size:1.4rem;font-weight:750}.line{display:inline-block;border-radius:7px;padding:6px 12px;color:white;background:#444;font-weight:bold}
 #result p{margin:9px 0}small{color:#526579}#log{max-height:125px;overflow:auto;font-size:.85rem}
-</style></head><body><main><header><h1>🚇 Mon Métro Intelligent</h1><div class="muted">V1.1 expérimentale · référentiel IDFM à charger · aucune donnée envoyée à notre serveur</div></header>
+</style></head><body><main><header><h1>🚇 Mon Métro Intelligent</h1><div class="muted">V1.2 expérimentale · référentiel local persistant · aucune donnée envoyée à notre serveur</div></header>
 <section class="card"><h2>1. Détection</h2><p id="status" role="status" aria-live="polite">En attente de votre choix.</p>
 <button id="gps">📍 Utiliser ma position</button><button id="stop" class="secondary">Arrêter le GPS</button>
 <p id="position" class="muted">Aucune position reçue.</p></section>
-<section class="card"><h2>2. Référentiel officiel</h2><p class="muted">Charger les associations stations–lignes de métro depuis les données ouvertes Île-de-France Mobilités. Nécessite une connexion ; si le serveur refuse l’accès depuis le navigateur, le prototype conserve les stations de démonstration.</p><button id="loadRef">Charger les stations du métro</button><p id="refStatus" role="status" aria-live="polite">Référentiel officiel non chargé.</p><small>Source : Île-de-France Mobilités — « Arrêts et lignes associées » (ODbL). Ce référentiel ne donne pas à lui seul l’ordre des stations ni la présence dans une rame.</small></section><section class="card"><h2>3. Tester sans prendre le métro</h2><p class="muted">Les parcours ci-dessous sont simulés, sans prétendre représenter une position réelle.</p>
+<section class="card"><h2>2. Référentiel officiel</h2><p class="muted">Le référentiel validé est conservé dans la mémoire locale du navigateur (IndexedDB). Un téléchargement est nécessaire uniquement pour la première installation ou une actualisation. En cas d'échec, la copie locale reste disponible.</p><button id="loadRef">Actualiser le référentiel</button><p id="refStatus" role="status" aria-live="polite">Recherche d’une copie locale…</p><small>Source : Île-de-France Mobilités — « Arrêts et lignes associées » (ODbL). Ce référentiel ne donne pas à lui seul l’ordre des stations ni la présence dans une rame.</small></section><section class="card"><h2>3. Tester sans prendre le métro</h2><p class="muted">Les parcours ci-dessous sont simulés, sans prétendre représenter une position réelle.</p>
 <select id="demo" aria-label="Parcours de démonstration"><option value="1">Ligne 1 : Louvre → Châtelet → Hôtel de Ville</option><option value="4">Ligne 4 : Gare du Nord → Gare de l'Est → Strasbourg–Saint-Denis</option><option value="14">Ligne 14 : Saint-Lazare → Madeleine → Pyramides</option></select>
 <button id="next">Simuler le prochain point</button><button id="reset" class="secondary">Réinitialiser</button>
 <p id="demoStatus" class="muted">Aucun point simulé.</p></section>
@@ -34,6 +34,11 @@ const routes={
 };
 const colors={'1':'#ffcd00','4':'#bb4b9b','14':'#67328e'};
 let watch=null,step=-1,previous=null,mode='none',officialStops=[];
+const CACHE_DB='metro-intelligent-ref-v1',CACHE_KEY='stations-idfm';
+function dbOpen(){return new Promise((resolve,reject)=>{const req=indexedDB.open(CACHE_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('reference');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function cacheRead(){const db=await dbOpen();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('reference','readonly'),r=tx.objectStore('reference').get(CACHE_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}finally{db.close()}}
+async function cacheWrite(record){const db=await dbOpen();try{await new Promise((resolve,reject)=>{const tx=db.transaction('reference','readwrite');tx.objectStore('reference').put(record,CACHE_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}finally{db.close()}}
+async function restoreReference(){try{const record=await cacheRead();if(record&&Array.isArray(record.items)&&record.items.length>=100){officialStops=record.items;$('refStatus').textContent=officialStops.length+' associations disponibles hors ligne · copie du '+new Date(record.savedAt).toLocaleDateString('fr-FR');}else $('refStatus').textContent='Aucune copie locale. Première installation nécessaire.'}catch(e){$('refStatus').textContent='Stockage local indisponible : '+e.message}}
 const $=id=>document.getElementById(id);
 function distance(a,b){const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad,x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;return 6371000*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function log(s){const p=document.createElement('div');p.textContent=new Date().toLocaleTimeString('fr-FR')+' — '+s;if($('log').textContent==='Aucun événement.')$('log').textContent='';$('log').prepend(p)}
@@ -77,8 +82,9 @@ try{
  }
  const parsed=items.map(x=>{const p=x.pointgeo;const lat=Array.isArray(p)?Number(p[0]):Number(p?.lat);const lon=Array.isArray(p)?Number(p[1]):Number(p?.lon);return {line:String(x.route_long_name||''),stop:{n:String(x.stop_name||''),lat,lon}}}).filter(x=>x.line&&x.stop.n&&Number.isFinite(x.stop.lat)&&Number.isFinite(x.stop.lon));
  if(parsed.length<100)throw new Error('Jeu incomplet ('+parsed.length+' stations-lignes)');
- officialStops=parsed;$('refStatus').textContent=parsed.length+' associations station–ligne chargées (IDFM).';log('Référentiel IDFM chargé : '+parsed.length+' associations');
- }catch(e){$('refStatus').textContent='Chargement impossible : '+e.message+'. Référentiel de démonstration conservé.';log('Erreur chargement référentiel IDFM');}finally{button.disabled=false}
+ await cacheWrite({items:parsed,savedAt:new Date().toISOString(),source:'IDFM arrets-lignes'});officialStops=parsed;$('refStatus').textContent=parsed.length+' associations enregistrées sur ce téléphone et disponibles hors ligne.';log('Référentiel IDFM enregistré localement : '+parsed.length+' associations');
+ }catch(e){$('refStatus').textContent='Actualisation impossible : '+e.message+(officialStops.length?'. Copie locale conservée.':'. Référentiel de démonstration conservé.');log('Erreur chargement référentiel IDFM');}finally{button.disabled=false}
 };
+restoreReference();
 $('demo').onchange=()=>{step=-1;previous=null;mode='none';$('demoStatus').textContent='Parcours changé, prêt pour simulation'};
 </script></body></html>
