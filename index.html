@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102846"><title>Mon Métro Intelligent — V1</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#102846;background:#eef3f8}*{box-sizing:border-box}
+body{margin:0}main{max-width:680px;margin:auto;padding:18px}h1{font-size:1.65rem;margin-bottom:4px}h2{font-size:1.1rem}
+.card{background:white;border-radius:16px;padding:18px;margin:15px 0;box-shadow:0 2px 12px #19345114}
+button,select{font:inherit;border-radius:10px;padding:12px;margin:4px 4px 4px 0}button{background:#1659aa;color:white;border:0;cursor:pointer}
+button.secondary{background:#e4ebf5;color:#102846}button:focus-visible,select:focus-visible{outline:3px solid #ee9f18}
+.muted{color:#526579}.pill{display:inline-block;background:#e6f0fb;border-radius:99px;padding:5px 10px;font-size:.85rem}
+.big{font-size:1.4rem;font-weight:750}.line{display:inline-block;border-radius:7px;padding:6px 12px;color:white;background:#444;font-weight:bold}
+#result p{margin:9px 0}small{color:#526579}#log{max-height:125px;overflow:auto;font-size:.85rem}
+</style></head><body><main><header><h1>🚇 Mon Métro Intelligent</h1><div class="muted">V1 expérimentale · stations de démonstration · aucune donnée envoyée à notre serveur</div></header>
+<section class="card"><h2>1. Détection</h2><p id="status" role="status" aria-live="polite">En attente de votre choix.</p>
+<button id="gps">📍 Utiliser ma position</button><button id="stop" class="secondary">Arrêter le GPS</button>
+<p id="position" class="muted">Aucune position reçue.</p></section>
+<section class="card"><h2>2. Tester sans prendre le métro</h2><p class="muted">Les parcours ci-dessous sont simulés, sans prétendre représenter une position réelle.</p>
+<select id="demo" aria-label="Parcours de démonstration"><option value="1">Ligne 1 : Louvre → Châtelet → Hôtel de Ville</option><option value="4">Ligne 4 : Gare du Nord → Gare de l'Est → Strasbourg–Saint-Denis</option><option value="14">Ligne 14 : Saint-Lazare → Madeleine → Pyramides</option></select>
+<button id="next">Simuler le prochain point</button><button id="reset" class="secondary">Réinitialiser</button>
+<p id="demoStatus" class="muted">Aucun point simulé.</p></section>
+<section class="card" id="result" aria-live="polite"><h2>3. Résultat</h2><p class="big" id="station">Station indéterminée</p>
+<p id="line">Ligne : indéterminée</p><p id="direction">Direction : indéterminée</p><p id="nextStation">Station suivante : indéterminée</p>
+<p><span id="confidence" class="pill">Confiance insuffisante</span></p><small id="reason">Une position isolée ne prouve pas que vous êtes dans une rame.</small></section>
+<section class="card"><h2>4. Informations temps réel</h2><p>Prochains passages : <strong>non connectés</strong>.</p><small>Une API PRIM sécurisée est nécessaire ; aucun horaire fictif n'est présenté comme réel.</small></section>
+<section class="card"><h2>Journal de test</h2><div id="log" aria-live="polite">Aucun événement.</div></section>
+<footer><small>Prototype V1 : référentiel partiel et statique. En tunnel, le GPS peut être indisponible. Aucun suivi en arrière-plan.</small></footer></main>
+<script>
+'use strict';
+// Coordonnées approximatives pour démonstration uniquement, non utilisables comme référentiel de production.
+const routes={
+'1':[{n:'Palais Royal – Musée du Louvre',lat:48.8624,lon:2.3368},{n:'Louvre – Rivoli',lat:48.8608,lon:2.3409},{n:'Châtelet',lat:48.8584,lon:2.3472},{n:'Hôtel de Ville',lat:48.8573,lon:2.3516}],
+'4':[{n:'Gare du Nord',lat:48.8809,lon:2.3553},{n:"Gare de l'Est",lat:48.8768,lon:2.3584},{n:'Château d’Eau',lat:48.8726,lon:2.3553},{n:'Strasbourg – Saint-Denis',lat:48.8695,lon:2.3543}],
+'14':[{n:'Saint-Lazare',lat:48.8754,lon:2.3252},{n:'Madeleine',lat:48.8695,lon:2.3252},{n:'Pyramides',lat:48.8657,lon:2.3347},{n:'Châtelet',lat:48.8584,lon:2.3472}]
+};
+const colors={'1':'#ffcd00','4':'#bb4b9b','14':'#67328e'};
+let watch=null,step=-1,previous=null,mode='none';
+const $=id=>document.getElementById(id);
+function distance(a,b){const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad,x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;return 6371000*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function log(s){const p=document.createElement('div');p.textContent=new Date().toLocaleTimeString('fr-FR')+' — '+s;if($('log').textContent==='Aucun événement.')$('log').textContent='';$('log').prepend(p)}
+function analyze(pos,accuracy,simulated=false){
+const candidates=Object.entries(routes).flatMap(([line,stops])=>stops.map((stop,i)=>({line,stop,i,stops,d:distance(pos,stop)}))).sort((a,b)=>a.d-b.d);
+const best=candidates[0],near=candidates.filter(x=>x.d<=Math.max(accuracy+120,180));
+const plausible=best.d<=Math.max(accuracy+120,180)&&accuracy<=500;
+$('station').textContent=plausible?best.stop.n:'Aucune station de référence suffisamment proche';
+$('position').textContent='Latitude '+pos.lat.toFixed(5)+' · Longitude '+pos.lon.toFixed(5)+' · précision ±'+Math.round(accuracy)+' m'+(simulated?' (simulation)':'');
+const lines=[...new Set(near.map(x=>x.line))];
+const unique=plausible&&lines.length===1;
+$('line').textContent='Ligne : '+(unique?best.line:lines.length>1?'plusieurs possibilités ('+lines.join(', ')+')':'indéterminée');
+let movement=false,forward=false;
+if(previous&&previous.line===best.line&&unique&&previous.i!==best.i&&simulated){movement=true;forward=best.i>previous.i}
+$('direction').textContent='Direction : '+(movement?(forward?best.stops.at(-1).n:best.stops[0].n)+' (simulée)':'indéterminée');
+$('nextStation').textContent='Station suivante : '+(movement?(best.stops[best.i+(forward?1:-1)]?.n||'Terminus'):'indéterminée');
+$('confidence').textContent=!plausible?'Non déterminé':!unique?'Ambigu — plusieurs lignes':movement?'Trajet simulé cohérent':'Station proche seulement';
+$('reason').textContent=simulated?'Simulation : résultat calculé à partir de points de test.':'Proximité géographique uniquement : présence dans une rame non confirmée.';
+previous=unique?{line:best.line,i:best.i}:null;
+log((simulated?'Simulation':'GPS')+' : '+(plausible?best.stop.n:'hors référentiel')+' ('+Math.round(best.d)+' m du point de référence)');
+}
+function stop(){if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;if(mode==='gps')mode='none';$('status').textContent='GPS arrêté';log('Suivi GPS arrêté')}
+$('stop').onclick=stop;
+$('gps').onclick=()=>{if(!navigator.geolocation){$('status').textContent='Géolocalisation indisponible';return}stop();previous=null;mode='gps';$('status').textContent='Demande de localisation…';watch=navigator.geolocation.watchPosition(p=>{if(mode!=='gps')return;$('status').textContent='Position reçue · '+new Date(p.timestamp).toLocaleTimeString('fr-FR');analyze({lat:p.coords.latitude,lon:p.coords.longitude},p.coords.accuracy,false)},e=>{$('status').textContent='Erreur GPS : '+e.message;log('Erreur de géolocalisation');stop();$('status').textContent='Localisation indisponible : '+e.message},{enableHighAccuracy:true,timeout:15000,maximumAge:5000})};
+$('next').onclick=()=>{stop();if(mode!=='demo'){step=-1;previous=null}mode='demo';const line=$('demo').value,stops=routes[line];step=(step+1)%stops.length;if(step===0)previous=null;const s=stops[step];$('status').textContent='Mode simulation actif';$('demoStatus').textContent='Point '+(step+1)+'/'+stops.length+' : '+s.n;analyze(s,20,true)};
+$('reset').onclick=()=>{stop();step=-1;previous=null;mode='none';$('station').textContent='Station indéterminée';$('line').textContent='Ligne : indéterminée';$('direction').textContent='Direction : indéterminée';$('nextStation').textContent='Station suivante : indéterminée';$('confidence').textContent='Confiance insuffisante';$('reason').textContent='Une position isolée ne prouve pas que vous êtes dans une rame.';$('demoStatus').textContent='Aucun point simulé';$('position').textContent='Aucune position reçue.';log('Réinitialisation')};
+$('demo').onchange=()=>{step=-1;previous=null;mode='none';$('demoStatus').textContent='Parcours changé, prêt pour simulation'};
+</script></body></html>
