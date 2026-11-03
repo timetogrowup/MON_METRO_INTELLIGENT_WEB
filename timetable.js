@@ -23,5 +23,5 @@ async function loadMany(queries,networkSha,signal,base='./distribution/timetable
  return queries.map(query=>{const row=records.get(query.lineId);if(row?.error)return {query,error:row.error};try{const now=anchor?anchor.server+performance.now()-anchor.mono:Date.now();return {query,response:{...response(row.data,query,now),clockSource:anchor?'server':'device'}};}catch(error){return {query,error:error.message};}});
 }
 async function erase(){memory.clear();const db=await open();try{await new Promise((resolve,reject)=>{const t=db.transaction('lines','readwrite');t.objectStore('lines').clear();t.oncomplete=resolve;t.onerror=()=>reject(t.error)})}finally{db.close()}}
-return {validate,response,load,loadMany,erase,httpTime};
+return {validate,response,load,loadMany,erase,httpTime,bundleVersion:'2026-11-03.11'};
 });
