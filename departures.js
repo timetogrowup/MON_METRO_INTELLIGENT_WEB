@@ -13,6 +13,7 @@ function catalogue(data){
 }
 function search(stations,text){const words=fold(text).trim().split(/\s+/).filter(Boolean);return stations.filter(s=>words.every(w=>fold(s.name).includes(w)))}
 function nearby(stations,pos,max=8){const rad=Math.PI/180;return stations.map(s=>{const a=Math.sin((s.lat-pos.lat)*rad/2)**2+Math.cos(pos.lat*rad)*Math.cos(s.lat*rad)*Math.sin((s.lon-pos.lon)*rad/2)**2;return {...s,distance:6371000*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}}).sort((a,b)=>a.distance-b.distance).slice(0,max)}
+function walkingMinutes(distance){return Number.isFinite(distance)&&distance>=0?Math.max(1,Math.ceil(distance/80)):null}
 function instant(value){return typeof value==='string'&&/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(value)&&Number.isFinite(Date.parse(value))?Date.parse(value):NaN}
 function presentation(event,now){
  const quality=event.quality,recorded=instant(event.sourceRecordedAtUtc),validUntil=instant(event.validUntilUtc);
@@ -34,5 +35,5 @@ function validateResponse(body,query){
  const ids=new Set();for(const event of body.departures){if(!event||typeof event!=='object'||!['estimated','scheduled','at_stop','cancelled','departed','unknown'].includes(event.status))throw new Error('Passage invalide');for(const key of ['stopId','lineId','directionId'])if(event[key]!==query[key])throw new Error('Passage rattaché à un autre service');if(typeof event.id!=='string'||ids.has(event.id)||!['real_time','timetable','stale','unknown'].includes(event.quality))throw new Error('Passage invalide');ids.add(event.id);}
  if(!Number.isFinite(body.nextRefreshAfterSeconds)||body.nextRefreshAfterSeconds<1||body.nextRefreshAfterSeconds>86400)throw new Error('Cadence de passages invalide');return body;
 }
-return {catalogue,search,nearby,instant,presentation,validateResponse};
+return {catalogue,search,nearby,walkingMinutes,instant,presentation,validateResponse};
 });
