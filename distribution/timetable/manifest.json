@@ -4,7 +4,7 @@
   "source": "https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip",
   "attribution": "Île-de-France Mobilités — GTFS — ODbL",
   "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
-  "generatedAtUtc": "2026-11-03T10:27:54.575430+00:00",
+  "generatedAtUtc": "2026-11-03T12:07:16.821975+00:00",
   "referenceDate": "2026-11-03",
   "networkSha256": "8da5ad5af8765570cd0b408c24e202c39c654a93ad1294528179cdb83aba78f0",
   "sourceSha256": "ad9145479a88f2a39e290968e914988ef7df3e9274bb75c269f0edfdb3a2121a",
@@ -17,22 +17,106 @@
       "sha256": "c82eaa0d5edcf4daa72881c08e24239d8c66c06227ac936ccea72a4132169648",
       "groups": 48
     },
+    "IDFM:C01372": {
+      "file": "IDFM-C01372.json",
+      "bytes": 1732780,
+      "sha256": "797a45dfb7b4845ce573c226bdd255052a0ba25b23bdb42dd3af1b64605306e2",
+      "groups": 48
+    },
+    "IDFM:C01373": {
+      "file": "IDFM-C01373.json",
+      "bytes": 1707751,
+      "sha256": "0d2fe5acab41dfb39c2f5a0f3c2370de3287280c54d20021eae8cc8c5a977dda",
+      "groups": 48
+    },
     "IDFM:C01374": {
       "file": "IDFM-C01374.json",
       "bytes": 2225397,
       "sha256": "e05464b48dda4d674a080611da4da6371905f15506eed4c68493f62a8ef8026c",
       "groups": 56
+    },
+    "IDFM:C01375": {
+      "file": "IDFM-C01375.json",
+      "bytes": 1605307,
+      "sha256": "ce264ee770b539319110d6d0ad352b7a6865f0b7b259d5e9993d090a8dbd7699",
+      "groups": 42
+    },
+    "IDFM:C01376": {
+      "file": "IDFM-C01376.json",
+      "bytes": 2028672,
+      "sha256": "50e3445bdde18f28738507efd6eca0d9c41958c7b1be9b23e2589cfaa33aa215",
+      "groups": 81
+    },
+    "IDFM:C01377": {
+      "file": "IDFM-C01377.json",
+      "bytes": 2435374,
+      "sha256": "9b3a3ea46dbbbfa838c9f59e76a48ca8d8f692efce584a974984d412c0da0b49",
+      "groups": 132
+    },
+    "IDFM:C01378": {
+      "file": "IDFM-C01378.json",
+      "bytes": 2251399,
+      "sha256": "c99d631a9cff7cc327aa6e198e6ef7da8a8962476ebc1fa2094e728edffcbc61",
+      "groups": 107
+    },
+    "IDFM:C01379": {
+      "file": "IDFM-C01379.json",
+      "bytes": 2607530,
+      "sha256": "0903acc235195409cee52a56955726997693f02d4fd7188c6fe45bb43d5b549e",
+      "groups": 105
+    },
+    "IDFM:C01380": {
+      "file": "IDFM-C01380.json",
+      "bytes": 920409,
+      "sha256": "c367933b4ae990bacd2822b6273509787b589fa657b87d9f759c3ebb37eecbe6",
+      "groups": 39
+    },
+    "IDFM:C01381": {
+      "file": "IDFM-C01381.json",
+      "bytes": 1304043,
+      "sha256": "0a2c683ba3cfdcd7a4a75159b801ffe8028a759455cb048745a2bd262db11a77",
+      "groups": 36
+    },
+    "IDFM:C01382": {
+      "file": "IDFM-C01382.json",
+      "bytes": 1972340,
+      "sha256": "1ea4e5e396b2e452c4f1559c5cb8e4417e0382aac8e07cc071feb5f4be27251f",
+      "groups": 60
+    },
+    "IDFM:C01383": {
+      "file": "IDFM-C01383.json",
+      "bytes": 2080235,
+      "sha256": "4930188829ad1990138ad1438179559f3f2faa0237ec9595805b5b133010e6b8",
+      "groups": 80
+    },
+    "IDFM:C01384": {
+      "file": "IDFM-C01384.json",
+      "bytes": 1602859,
+      "sha256": "cdf413cd05c5fd580097d4d6d79e0d48a0c5efc0c664ef66434488f63be85af6",
+      "groups": 40
+    },
+    "IDFM:C01386": {
+      "file": "IDFM-C01386.json",
+      "bytes": 144138,
+      "sha256": "e47c2aca79cfd2f83b251aa9812d952342c1b95581f1d1b583e6dadb82290669",
+      "groups": 6
+    },
+    "IDFM:C01387": {
+      "file": "IDFM-C01387.json",
+      "bytes": 212846,
+      "sha256": "ab52a98b26884178f763c977627a6c3a3be7876fb4d18375c64d7843a7d2103a",
+      "groups": 12
     }
   },
   "qa": {
-    "departures": 88744,
-    "groups": 104,
+    "departures": 562650,
+    "groups": 940,
     "excluded_frequency_trips": 0,
     "unmatched_reference_events": 0
   },
   "limitations": [
     "Theoretical schedules only; no disruptions or live estimates.",
-    "Pilot lines 1 and 4; only services matching the current metro catalogue.",
+    "Metro lines in the current reference; only matching boarding services.",
     "Frequency-based trips excluded; empty results do not prove end of service."
   ]
 }
