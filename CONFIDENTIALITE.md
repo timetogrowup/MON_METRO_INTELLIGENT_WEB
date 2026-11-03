@@ -6,3 +6,8 @@ Le GPS démarre uniquement sur action « Utiliser ma position ». Le bouton d'ar
 Le réseau versionné peut être supprimé par son bouton dédié. La suppression des données du site dans le navigateur efface aussi l'ancien référentiel, les caches de l'interface et les permissions selon les réglages du navigateur. Le journal affiché est local à la page ; aucune exportation ou télémétrie automatique n'est activée.
 
 En tunnel ou après 15 secondes sans observation fraîche, le moteur expérimental affiche une position indéterminée. Les indications manuelles sont identifiées comme telles. Les hypothèses de progression ne constituent pas une preuve de présence dans une rame et ne doivent pas être utilisées pour une décision de sécurité.
+
+## Consultation des passages — wenare
+La recherche de station, le choix de service et les propositions de proximité sont traités sur cet appareil. La localisation de proximité est facultative et ponctuelle ; ses coordonnées ne sont pas envoyées à un service de passages. Le pilote d'horaires théoriques télécharge des fichiers officiels par ligne depuis le même hébergement GitHub Pages et les conserve dans une base locale distincte. Ces requêtes restent soumises aux journaux techniques de l'hébergeur. Effacer les données du réseau efface également ces horaires.
+
+Le service de passages temps réel n'est pas activé dans cette livraison. Avant son activation, préciser l'hébergeur et les traitements réellement mis en œuvre. Il recevra uniquement les identifiants nécessaires à la consultation du service, jamais la position GPS ; les identifiants consultés peuvent néanmoins révéler des habitudes.

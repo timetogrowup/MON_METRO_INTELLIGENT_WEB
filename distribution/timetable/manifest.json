@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "quality": "timetable",
+  "source": "https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip",
+  "attribution": "Île-de-France Mobilités — GTFS — ODbL",
+  "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "generatedAtUtc": "2026-11-03T10:27:54.575430+00:00",
+  "referenceDate": "2026-11-03",
+  "networkSha256": "8da5ad5af8765570cd0b408c24e202c39c654a93ad1294528179cdb83aba78f0",
+  "sourceSha256": "ad9145479a88f2a39e290968e914988ef7df3e9274bb75c269f0edfdb3a2121a",
+  "validFromUtc": "2026-11-02T23:00:00+00:00",
+  "validUntilUtc": "2026-11-04T23:00:00+00:00",
+  "lines": {
+    "IDFM:C01371": {
+      "file": "IDFM-C01371.json",
+      "bytes": 2005728,
+      "sha256": "c82eaa0d5edcf4daa72881c08e24239d8c66c06227ac936ccea72a4132169648",
+      "groups": 48
+    },
+    "IDFM:C01374": {
+      "file": "IDFM-C01374.json",
+      "bytes": 2225397,
+      "sha256": "e05464b48dda4d674a080611da4da6371905f15506eed4c68493f62a8ef8026c",
+      "groups": 56
+    }
+  },
+  "qa": {
+    "departures": 88744,
+    "groups": 104,
+    "excluded_frequency_trips": 0,
+    "unmatched_reference_events": 0
+  },
+  "limitations": [
+    "Theoretical schedules only; no disruptions or live estimates.",
+    "Pilot lines 1 and 4; only services matching the current metro catalogue.",
+    "Frequency-based trips excluded; empty results do not prove end of service."
+  ]
+}

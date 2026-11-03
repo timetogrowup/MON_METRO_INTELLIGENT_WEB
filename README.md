@@ -1,12 +1,9 @@
 # wenare
 
-Application de transport en Île-de-France : comprendre son trajet et, à terme, consulter les prochains passages à une station ou un arrêt.
+[Ouvrir l’application](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
 
-[Ouvrir wenare](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
+Cherchez une station de métro sans GPS, choisissez votre ligne et votre direction, puis consultez les prochains passages. Un pilote d’horaires **théoriques officiels** est disponible sur les lignes 1 et 4, avec validité limitée et cache local par ligne. Ces horaires ne décrivent pas les perturbations et ne constituent pas du temps réel.
 
-## Version disponible
-Référentiel et moteur métro, synthèse de trajet, GPS et choix manuel. Les diagnostics et simulations sont facultatifs. La reconnaissance nécessite encore une qualification physique.
+« Mon trajet » conserve le GPS et le choix manuel du trajet métro. Les tests et diagnostics restent facultatifs. La reconnaissance physique demeure à qualifier ; RER, Transilien, tramways et bus ne sont pas encore intégrés au moteur publié. Le service PRIM temps réel n’est pas activé.
 
-Les prochains passages temps réel et les autres modes sont à développer ; ils ne sont pas connectés dans cette version. Aucun horaire fictif n'est fourni comme information réelle.
-
-Le nom du produit est wenare. L'adresse, les identifiants techniques et le stockage local restent conservés. Voir [Confidentialité](CONFIDENTIALITE.md).
+L’origine, les identifiants techniques et les données locales historiques sont conservés. Voir [Confidentialité](CONFIDENTIALITE.md).
