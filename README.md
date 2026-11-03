@@ -1,9 +1,9 @@
 # wenare
 
-[Ouvrir l’application](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
+[Ouvrir WENARE](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
 
-Consultation des stations/arrêts, proximité facultative et prochains horaires théoriques : métro (16 lignes), RER A à E et pilote bus 20, 21, 26, 38, 91. Les autres bus, Transilien et tramways ne sont pas encore couverts. Aucune destination personnelle à saisir : choisir une direction de ligne.
+Je suis ici. Qu’est-ce qui s’offre à moi ? À l’ouverture, WENARE demande votre position puis affiche les trois points de départ couverts les plus proches, tous modes confondus, avec toutes leurs lignes et destinations et les deux prochains passages par service. Aucune sélection préalable ; l’autorisation GPS du navigateur peut être nécessaire. Recherche manuelle et suivi métro restent dans les options.
 
-Les données de ligne sont téléchargées à la demande et restent utilisables hors ligne jusqu’à leur expiration. Horaires théoriques : aucun temps réel ni information courante sur les perturbations. Le suivi estimatif en trajet reste limité au métro et ne prouve pas la présence à bord.
+Couverture actuelle : métro (16 lignes), RER A–E et pilote bus 20, 21, 26, 38, 91. Le reste des bus, Transilien et tramways ne sont pas couverts. Horaires théoriques, pas de temps réel ni de perturbations connues. Marche indicative sur distance directe, sans garantie d’atteindre un départ.
 
-Sources : Île-de-France Mobilités — GTFS (Licence Mobilité), référentiels officiels (ODbL). Attribution et validité dans les manifestes de données. [Confidentialité](CONFIDENTIALITE.md).
+Les fichiers de ligne téléchargés restent utilisables hors ligne jusqu’à expiration. La position est traitée sur l’appareil, sans stockage de trajet. Sources : Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiels officiels (ODbL). [Confidentialité](CONFIDENTIALITE.md).

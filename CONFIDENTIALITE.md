@@ -1,7 +1,7 @@
 # Confidentialité — version expérimentale
 La position GPS est traitée dans le navigateur. Elle n'est pas envoyée à un serveur par l'application. Les requêtes de référentiel utilisent des URL fixes, sans coordonnées. L'hébergeur et les fournisseurs de données peuvent recevoir les métadonnées habituelles des connexions HTTP, notamment l'adresse IP.
 
-Le GPS démarre uniquement sur action « Utiliser ma position ». Le bouton d'arrêt appelle clearWatch ; les callbacks reçus après changement de mode sont ignorés. La dernière position affichée n'est pas un suivi actif. Les coordonnées et hypothèses ne sont pas conservées dans IndexedDB ; les référentiels officiels y sont stockés.
+À l’ouverture, l’application demande automatiquement une position ponctuelle au navigateur, qui sollicite votre autorisation si nécessaire. Lorsque celle-ci est accordée, elle propose les trois points couverts les plus proches et leurs horaires sans autre sélection. Pendant l’affichage actif, la position et les horaires peuvent être réévalués après une minute ; les demandes et actualisations sont suspendues en arrière-plan ou après « Arrêter ». Les callbacks tardifs sont ignorés. Le suivi expérimental de trajet, distinct, utilise watchPosition uniquement sur action explicite et son arrêt appelle clearWatch. La dernière position affichée n'est pas un suivi actif. Les coordonnées et hypothèses ne sont pas conservées dans IndexedDB ; les référentiels officiels y sont stockés.
 
 Le réseau versionné peut être supprimé par son bouton dédié. La suppression des données du site dans le navigateur efface aussi l'ancien référentiel, les caches de l'interface et les permissions selon les réglages du navigateur. Le journal affiché est local à la page ; aucune exportation ou télémétrie automatique n'est activée.
 
@@ -15,3 +15,7 @@ Le service de passages temps réel n'est pas activé dans cette livraison. Avant
 
 ## Extension de consultation bus/RER — 3 novembre 2026
 Les consultations théoriques RER et bus du pilote téléchargent un catalogue et les horaires de la ligne choisie depuis GitHub Pages. La position sert uniquement à classer les lieux sur l’appareil ; elle n’est pas envoyée à WENARE. L’index bus/RER et les paquets téléchargés sont conservés localement pour un usage hors ligne tant qu’ils sont valides. « Effacer les données du réseau » les efface avec le réseau métro, sans toucher au référentiel historique séparé. L’hébergement des fichiers peut recevoir les métadonnées habituelles de requête (notamment adresse IP et fichier demandé). Aucun compte utilisateur ni historique de déplacements n’est ajouté.
+
+
+## Accueil automatique
+Les coordonnées de l’accueil restent uniquement en mémoire de la page. Les requêtes de catalogue et d’horaires utilisent des chemins de fichiers fixes sans latitude ni longitude ; les lignes chargées peuvent néanmoins révéler un secteur à l’hébergeur. Les coordonnées ne sont ni stockées ni journalisées par cet accueil. Les horaires sont regroupés par ligne pour éviter un téléchargement par direction. Refuser la localisation laisse la recherche manuelle accessible ; aucune position n’est inventée. Le navigateur permet de retirer l’autorisation à tout moment.

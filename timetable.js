@@ -13,6 +13,15 @@ async function load(query,networkSha,signal,base='./distribution/timetable/'){
  }catch(error){if(signal?.aborted)throw error;record=record||await stored(query.lineId).catch(()=>null);if(!record)throw new Error(error.message||'Horaires théoriques indisponibles.');}
  const data=await validate(record.bytes,record.manifest,query.lineId,networkSha);const now=anchor?anchor.server+performance.now()-anchor.mono:Date.now();return {...response(data,query,now),clockSource:anchor?'server':'device',referenceDate:record.manifest.referenceDate};
 }
+async function loadMany(queries,networkSha,signal,base='./distribution/timetable/'){
+ let manifest=null,anchor=null;try{const start=performance.now(),r=await fetch(base+'manifest.json',{cache:'no-store',signal});if(!r.ok)throw new Error();const server=httpTime(r.headers.get('Date'),r.headers.get('Age'),performance.now()-start);if(Number.isFinite(server))anchor={server,mono:performance.now()};manifest=await r.json();}catch(error){if(signal?.aborted)throw error;}
+ const lines=[...new Set(queries.map(q=>q.lineId))],records=new Map();let cursor=0;
+ async function worker(){while(cursor<lines.length){const line=lines[cursor++];let record=memory.get(line);try{const file=manifest?.lines?.[line];if(file){if(!/^[A-Za-z0-9-]+\.json$/.test(file.file))throw new Error('Chemin horaire incorrect');if(!record||record.manifest.lines?.[line]?.sha256!==file.sha256||record.manifest.networkSha256!==networkSha){const r=await fetch(base+file.file,{cache:'no-store',signal});if(!r.ok)throw new Error();const bytes=await r.arrayBuffer();await validate(bytes,manifest,line,networkSha);record={bytes,manifest};memory.set(line,record);await save(line,record).catch(()=>{});}}else if(manifest)throw new Error('Horaires non disponibles pour cette ligne');
+ if(!record)record=await stored(line).catch(()=>null);if(!record)throw new Error('Horaires indisponibles hors ligne');const data=await validate(record.bytes,record.manifest,line,networkSha);records.set(line,{data});
+ }catch(error){if(signal?.aborted)throw error;record=record||await stored(line).catch(()=>null);try{if(!record)throw error;records.set(line,{data:await validate(record.bytes,record.manifest,line,networkSha)});}catch{records.set(line,{error:'Horaires théoriques indisponibles pour cette ligne.'});}}}}
+ await Promise.all(Array.from({length:Math.min(3,lines.length)},worker));if(signal?.aborted)throw new Error('Consultation arrêtée');
+ return queries.map(query=>{const row=records.get(query.lineId);if(row?.error)return {query,error:row.error};try{const now=anchor?anchor.server+performance.now()-anchor.mono:Date.now();return {query,response:{...response(row.data,query,now),clockSource:anchor?'server':'device'}};}catch(error){return {query,error:error.message};}});
+}
 async function erase(){memory.clear();const db=await open();try{await new Promise((resolve,reject)=>{const t=db.transaction('lines','readwrite');t.objectStore('lines').clear();t.oncomplete=resolve;t.onerror=()=>reject(t.error)})}finally{db.close()}}
-return {validate,response,load,erase,httpTime};
+return {validate,response,load,loadMany,erase,httpTime};
 });
