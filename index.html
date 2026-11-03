@@ -10,7 +10,7 @@ button.secondary{background:#e4ebf5;color:#102846}button:focus-visible,select:fo
 .muted{color:#526579}.pill{display:inline-block;background:#e6f0fb;border-radius:99px;padding:5px 10px;font-size:.85rem}
 .big{font-size:1.4rem;font-weight:750}.line{display:inline-block;border-radius:7px;padding:6px 12px;color:white;background:#444;font-weight:bold}
 #result p{margin:9px 0}small{color:#526579}#log{max-height:125px;overflow:auto;font-size:.85rem}
-</style></head><body><main><header><h1>🚇 Mon Métro Intelligent</h1><div class="muted">V1.2 expérimentale · référentiel local persistant · aucune donnée envoyée à notre serveur</div></header>
+</style><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#123c65"></head><body><main><header><h1>🚇 Mon Métro Intelligent</h1><div class="muted">V1.2 expérimentale · référentiel local persistant · aucune donnée envoyée à notre serveur</div></header>
 <section class="card"><h2>1. Détection</h2><p id="status" role="status" aria-live="polite">En attente de votre choix.</p>
 <button id="gps">📍 Utiliser ma position</button><button id="stop" class="secondary">Arrêter le GPS</button>
 <p id="position" class="muted">Aucune position reçue.</p></section>
@@ -22,8 +22,8 @@ button.secondary{background:#e4ebf5;color:#102846}button:focus-visible,select:fo
 <p id="line">Ligne : indéterminée</p><p id="direction">Direction : indéterminée</p><p id="nextStation">Station suivante : indéterminée</p>
 <p><span id="confidence" class="pill">Confiance insuffisante</span></p><small id="reason">Une position isolée ne prouve pas que vous êtes dans une rame.</small></section>
 <section class="card"><h2>5. Informations temps réel</h2><p>Prochains passages : <strong>non connectés</strong>.</p><small>Une API PRIM sécurisée est nécessaire ; aucun horaire fictif n'est présenté comme réel.</small></section>
-<section class="card"><h2>Journal de test</h2><div id="log" aria-live="polite">Aucun événement.</div></section>
-<footer><small>Prototype V1 : référentiel partiel et statique. En tunnel, le GPS peut être indisponible. Aucun suivi en arrière-plan.</small></footer></main>
+<section class="card"><h2>Analyse des tronçons — expérimentale</h2><p id="journeyStatus" role="status" aria-live="polite">Installez le réseau versionné pour commencer.</p><p id="journeyLine">Ligne : indéterminée</p><p id="journeySegment">Tronçon : indéterminé</p><p id="journeyDirection">Direction : indéterminée</p><p id="journeyNext">Station suivante : indéterminée</p><p class="muted">Une proximité ou une progression compatible ne prouve pas une présence dans une rame. En tunnel, aucune progression n’est inventée.</p><h3>Renseigner mon trajet</h3><label for="manualPattern">Ligne, direction et variante</label><select id="manualPattern" disabled></select><label for="manualStop">Point d’arrêt actuel</label><select id="manualStop"></select><button id="manualConfirm" disabled>Utiliser mon choix manuel</button><p class="muted">Votre choix est identifié comme manuel. Les variantes suivent les parcours théoriques de la date du référentiel.</p></section><section class="card"><h2>Réseau versionné et hors ligne</h2><p id="networkStatus" role="status" aria-live="polite">Recherche du réseau installé…</p><button id="networkUpdate">Installer / actualiser le réseau</button><button id="networkRollback" class="secondary">Restaurer la version précédente</button><button id="eraseNetwork" class="secondary">Effacer le réseau versionné</button><p class="muted">Les données officielles sont vérifiées avant installation. Elles restent sur cet appareil. Les services sont datés ; ils ne donnent pas la position réelle des rames. La copie historique de 803 associations reste conservée.</p></section><section class="card"><h2>Journal de test</h2><div id="log" aria-live="polite">Aucun événement.</div></section>
+<footer><small>Version expérimentale : données officielles datées, hypothèses à confirmer. En tunnel, le GPS peut être indisponible. Aucun suivi en arrière-plan.</small></footer></main>
 <script>
 'use strict';
 // Coordonnées approximatives pour démonstration uniquement, non utilisables comme référentiel de production.
@@ -38,13 +38,14 @@ const CACHE_DB='metro-intelligent-ref-v1',CACHE_KEY='stations-idfm';
 function dbOpen(){return new Promise((resolve,reject)=>{const req=indexedDB.open(CACHE_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('reference');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 async function cacheRead(){const db=await dbOpen();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('reference','readonly'),r=tx.objectStore('reference').get(CACHE_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}finally{db.close()}}
 async function cacheWrite(record){const db=await dbOpen();try{await new Promise((resolve,reject)=>{const tx=db.transaction('reference','readwrite');tx.objectStore('reference').put(record,CACHE_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}finally{db.close()}}
-async function restoreReference(){try{const record=await cacheRead();if(record&&Array.isArray(record.items)&&record.items.length>=100){officialStops=record.items;$('refStatus').textContent=officialStops.length+' associations disponibles hors ligne · copie du '+new Date(record.savedAt).toLocaleDateString('fr-FR');}else $('refStatus').textContent='Aucune copie locale. Première installation nécessaire.'}catch(e){$('refStatus').textContent='Stockage local indisponible : '+e.message}}
+async function restoreReference(){try{const record=await cacheRead();if(record&&Array.isArray(record.items)&&record.items.length>=100&&record.items.every(x=>x.stop&&Number.isFinite(x.stop.lat)&&Number.isFinite(x.stop.lon))){officialStops=record.items;$('refStatus').textContent=officialStops.length+' associations disponibles hors ligne · copie du '+new Date(record.savedAt).toLocaleDateString('fr-FR');}else $('refStatus').textContent='Aucune copie locale. Première installation nécessaire.'}catch(e){$('refStatus').textContent='Stockage local indisponible : '+e.message}}
 const $=id=>document.getElementById(id);
 function distance(a,b){const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad,x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;return 6371000*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function log(s){const p=document.createElement('div');p.textContent=new Date().toLocaleTimeString('fr-FR')+' — '+s;if($('log').textContent==='Aucun événement.')$('log').textContent='';$('log').prepend(p)}
-function analyze(pos,accuracy,simulated=false){
+function analyze(pos,accuracy,simulated=false,timestamp=Date.now()){
+if(!simulated&&window.mmiObserve)window.mmiObserve(pos,accuracy,timestamp);
 const demoCandidates=Object.entries(routes).flatMap(([line,stops])=>stops.map((stop,i)=>({line,stop,i,stops,d:distance(pos,stop)})));
-const officialCandidates=officialStops.map(x=>({line:x.line,stop:x.stop,i:-1,stops:[],d:distance(pos,x.stop)}));
+const officialCandidates=officialStops.filter(x=>x.stop&&Number.isFinite(x.stop.lat)&&Number.isFinite(x.stop.lon)).map(x=>({line:x.line,stop:x.stop,i:-1,stops:[],d:distance(pos,x.stop)}));
 const candidates=(simulated?demoCandidates:(officialStops.length?officialCandidates:demoCandidates)).sort((a,b)=>a.d-b.d);
 const best=candidates[0],near=candidates.filter(x=>x.d<=Math.max(accuracy+120,180));
 const plausible=best.d<=Math.max(accuracy+120,180)&&accuracy<=500;
@@ -62,24 +63,19 @@ $('reason').textContent=simulated?'Simulation : résultat calculé à partir de 
 previous=simulated&&unique?{line:best.line,i:best.i}:null;
 log((simulated?'Simulation':'GPS')+' : '+(plausible?best.stop.n:'hors référentiel')+' ('+Math.round(best.d)+' m du point de référence)');
 }
-function stop(){if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;if(mode==='gps')mode='none';$('status').textContent='GPS arrêté';log('Suivi GPS arrêté')}
+function stop(){if(window.mmiStop)window.mmiStop();if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;if(mode==='gps')mode='none';$('status').textContent='GPS arrêté';log('Suivi GPS arrêté')}
 $('stop').onclick=stop;
-$('gps').onclick=()=>{if(!navigator.geolocation){$('status').textContent='Géolocalisation indisponible';return}stop();previous=null;step=-1;$('demoStatus').textContent='Simulation inactive — position GPS réelle';mode='gps';$('status').textContent='Demande de localisation…';watch=navigator.geolocation.watchPosition(p=>{if(mode!=='gps')return;$('status').textContent='Position reçue · '+new Date(p.timestamp).toLocaleTimeString('fr-FR');analyze({lat:p.coords.latitude,lon:p.coords.longitude},p.coords.accuracy,false)},e=>{$('status').textContent='Erreur GPS : '+e.message;log('Erreur de géolocalisation');stop();$('status').textContent='Localisation indisponible : '+e.message},{enableHighAccuracy:true,timeout:15000,maximumAge:5000})};
+$('gps').onclick=()=>{if(!navigator.geolocation){$('status').textContent='Géolocalisation indisponible';return}stop();previous=null;step=-1;$('demoStatus').textContent='Simulation inactive — position GPS réelle';mode='gps';$('status').textContent='Demande de localisation…';watch=navigator.geolocation.watchPosition(p=>{if(mode!=='gps')return;$('status').textContent='Position reçue · '+new Date(p.timestamp).toLocaleTimeString('fr-FR');analyze({lat:p.coords.latitude,lon:p.coords.longitude},p.coords.accuracy,false,p.timestamp)},e=>{$('status').textContent='Erreur GPS : '+e.message;log('Erreur de géolocalisation');stop();$('status').textContent='Localisation indisponible : '+e.message},{enableHighAccuracy:true,timeout:15000,maximumAge:5000})};
 $('next').onclick=()=>{stop();if(mode!=='demo'){step=-1;previous=null}mode='demo';const line=$('demo').value,stops=routes[line];step=(step+1)%stops.length;if(step===0)previous=null;const s=stops[step];$('status').textContent='Mode simulation actif';$('demoStatus').textContent='Point '+(step+1)+'/'+stops.length+' : '+s.n;analyze(s,20,true)};
 $('reset').onclick=()=>{stop();step=-1;previous=null;mode='none';$('station').textContent='Station indéterminée';$('line').textContent='Ligne : indéterminée';$('direction').textContent='Direction : indéterminée';$('nextStation').textContent='Station suivante : indéterminée';$('confidence').textContent='Confiance insuffisante';$('reason').textContent='Une position isolée ne prouve pas que vous êtes dans une rame.';$('demoStatus').textContent='Aucun point simulé';$('position').textContent='Aucune position reçue.';log('Réinitialisation')};
 $('loadRef').onclick=async()=>{
 const button=$('loadRef');button.disabled=true;$('refStatus').textContent='Chargement des données IDFM…';
 try{
- const base='https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/arrets-lignes/records';
- const items=[];let total=Infinity;
- for(let offset=0;offset<total;offset+=100){
-  const url=base+'?where='+encodeURIComponent('mode="Metro"')+'&select='+encodeURIComponent('route_long_name,stop_name,pointgeo')+'&limit=100&offset='+offset;
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
-  let data;try{const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);data=await response.json()}finally{clearTimeout(timeout)}
-  if(!Array.isArray(data.results))throw new Error('Format de réponse inattendu');
-  total=Number(data.total_count)||data.results.length;items.push(...data.results);
-  if(!data.results.length||offset>=9900)break;
- }
+ const url='https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/arrets-lignes/exports/json?where='+encodeURIComponent('mode="Metro"');
+ const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),20000);
+ let items;try{const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);items=await response.json()}finally{clearTimeout(timeout)}
+ if(!Array.isArray(items))throw new Error('Format de réponse inattendu');
+ if(new Set(items.map(x=>x.id+'|'+x.stop_id)).size!==items.length)throw new Error('Doublons dans la source stations');
  const parsed=items.map(x=>{const p=x.pointgeo;const lat=Array.isArray(p)?Number(p[0]):Number(p?.lat);const lon=Array.isArray(p)?Number(p[1]):Number(p?.lon);return {line:String(x.route_long_name||''),stop:{n:String(x.stop_name||''),lat,lon}}}).filter(x=>x.line&&x.stop.n&&Number.isFinite(x.stop.lat)&&Number.isFinite(x.stop.lon));
  if(parsed.length<100)throw new Error('Jeu incomplet ('+parsed.length+' stations-lignes)');
  await cacheWrite({items:parsed,savedAt:new Date().toISOString(),source:'IDFM arrets-lignes'});officialStops=parsed;$('refStatus').textContent=parsed.length+' associations enregistrées sur ce téléphone et disponibles hors ligne.';log('Référentiel IDFM enregistré localement : '+parsed.length+' associations');
@@ -87,4 +83,13 @@ try{
 };
 restoreReference();
 $('demo').onchange=()=>{step=-1;previous=null;mode='none';$('demoStatus').textContent='Parcours changé, prêt pour simulation'};
+</script><script src="network.js"></script><script src="journey.js"></script><script src="journey-ui.js"></script>
+<script>
+(function(){
+ const status=document.getElementById('networkStatus');
+ MMIReference.read().then(record=>{status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}).catch(e=>status.textContent='Stockage réseau indisponible : '+e.message);
+ document.getElementById('networkUpdate').onclick=async function(){this.disabled=true;status.textContent='Téléchargement et vérification…';try{const record=await MMIReference.update();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent='Actualisation impossible : '+e.message+' ; copie précédente conservée.'}finally{this.disabled=false}};
+ document.getElementById('networkRollback').onclick=async()=>{try{const record=await MMIReference.rollback();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent=e.message}};
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.info('Cache interface indisponible',e.message));
+})();
 </script></body></html>
