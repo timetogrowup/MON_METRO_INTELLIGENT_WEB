@@ -2,8 +2,8 @@
 
 [Ouvrir l’application](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
 
-Cherchez une station de métro sans GPS, choisissez votre ligne et votre direction, puis consultez les prochains passages. Un pilote d’horaires **théoriques officiels** est disponible sur les lignes 1 et 4, avec validité limitée et cache local par ligne. Ces horaires ne décrivent pas les perturbations et ne constituent pas du temps réel.
+Consultation des stations/arrêts, proximité facultative et prochains horaires théoriques : métro (16 lignes), RER A à E et pilote bus 20, 21, 26, 38, 91. Les autres bus, Transilien et tramways ne sont pas encore couverts. Aucune destination personnelle à saisir : choisir une direction de ligne.
 
-« Mon trajet » conserve le GPS et le choix manuel du trajet métro. Les tests et diagnostics restent facultatifs. La reconnaissance physique demeure à qualifier ; RER, Transilien, tramways et bus ne sont pas encore intégrés au moteur publié. Le service PRIM temps réel n’est pas activé.
+Les données de ligne sont téléchargées à la demande et restent utilisables hors ligne jusqu’à leur expiration. Horaires théoriques : aucun temps réel ni information courante sur les perturbations. Le suivi estimatif en trajet reste limité au métro et ne prouve pas la présence à bord.
 
-L’origine, les identifiants techniques et les données locales historiques sont conservés. Voir [Confidentialité](CONFIDENTIALITE.md).
+Sources : Île-de-France Mobilités — GTFS (Licence Mobilité), référentiels officiels (ODbL). Attribution et validité dans les manifestes de données. [Confidentialité](CONFIDENTIALITE.md).

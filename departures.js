@@ -6,7 +6,7 @@ function catalogue(data){
  const stops=new Map(data.stops.map(s=>[s.stop_id,s])),lines=new Map(data.lines.map(l=>[l.route_id,l])),byPoint=new Map();
  for(const pattern of data.patterns){const destinationId=pattern.stop_ids.at(-1),destinationName=stops.get(destinationId)?.stop_name;if(!destinationName)continue;
   pattern.stop_ids.forEach((id,i)=>{if(i===pattern.stop_ids.length-1||pattern.stop_rules?.[i]?.pickup_type==='1')return;const s=stops.get(id),line=lines.get(pattern.route_id);if(!s||!line)return;const list=byPoint.get(id)||[];
-   const key=JSON.stringify([id,pattern.route_id,destinationId]);if(!list.some(x=>x.key===key))list.push({key,stopId:id,lineId:pattern.route_id,lineName:line.route_short_name,directionId:destinationId,destinationName,mode:'metro',quayName:s.platform_code||null});byPoint.set(id,list);
+   const key=JSON.stringify([id,pattern.route_id,destinationId]);if(!list.some(x=>x.key===key))list.push({key,stopId:id,lineId:pattern.route_id,lineName:line.route_short_name,directionId:destinationId,destinationName,mode:line.mode||'metro',quayName:s.platform_code||null});byPoint.set(id,list);
   });
  }
  return data.stations.map(s=>({...s,services:s.stop_point_ids.flatMap(id=>byPoint.get(id)||[])})).filter(s=>s.services.length).sort((a,b)=>a.name.localeCompare(b.name,'fr'));
