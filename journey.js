@@ -1,5 +1,7 @@
 /* Experimental geometry and temporal hypotheses. No position ever leaves the device. */
 (function(global){'use strict';
+const dateFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
+function serviceDate(now){return dateFormatter.format(new Date(now))}
 function distance(a,b){const lat=(a[1]+b[1])*Math.PI/360;return Math.hypot((b[0]-a[0])*111320*Math.cos(lat),(b[1]-a[1])*111320)}
 function project(point,line){let best=null,offset=0,total=0;for(let i=0;i<line.length-1;i++)total+=distance(line[i],line[i+1]);for(let i=0;i<line.length-1;i++){const a=line[i],b=line[i+1],lat=point[1]*Math.PI/180,sx=111320*Math.cos(lat),dx=(b[0]-a[0])*sx,dy=(b[1]-a[1])*111320,ax=(a[0]-point[0])*sx,ay=(a[1]-point[1])*111320,len=distance(a,b),den=dx*dx+dy*dy;if(den){const t=Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)),d=Math.hypot(ax+t*dx,ay+t*dy);if(!best||d<best.distance)best={distance:d,along:offset+t*len,length:total,point:[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]}}offset+=len}return best}
 class Engine{
@@ -7,19 +9,24 @@ class Engine{
  reset(){this.history=[];this.last=null;return {status:'unknown',reason:'Suivi arrêté ou réinitialisé',candidates:[]}}
  candidates(point,accuracy){const radius=Math.max(40,Math.min(150,accuracy)),dx=radius/(111320*Math.cos(point[1]*Math.PI/180)),dy=radius/111320,set=new Set();for(let x=Math.floor((point[0]-dx)*100);x<=Math.floor((point[0]+dx)*100);x++)for(let y=Math.floor((point[1]-dy)*100);y<=Math.floor((point[1]+dy)*100);y++)for(const s of this.grid.get(x+':'+y)||[])set.add(s);return [...set].map(s=>{const p=project(point,s.coords);return p?{...s,distance:p.distance,progress:s.offset+p.along}:null}).filter(s=>s&&s.distance<=radius).sort((a,b)=>a.distance-b.distance)}
  observe(fix,now=Date.now()){
-  if(!this.valid)return {status:'unknown',reason:'Référentiel de service expiré : actualisez-le',candidates:[]};
+  if(!this.valid||this.data.service_date!==serviceDate(now)){this.history=[];this.last=null;return {status:'unknown',reason:'Référentiel de service expiré : actualisez-le',candidates:[]}};
   if(!Number.isFinite(fix.lon)||!Number.isFinite(fix.lat)||!Number.isFinite(fix.timestamp)||!Number.isFinite(fix.accuracy)||fix.accuracy<=0||fix.accuracy>150||now-fix.timestamp>15000||fix.timestamp>now+5000){this.history=[];return {status:'unknown',reason:'Position absente, ancienne ou trop imprécise',candidates:[]}};
   const point=[fix.lon,fix.lat];if(this.last){const dt=(fix.timestamp-this.last.timestamp)/1000;if(dt<=0)return {status:'unknown',reason:'Observation non chronologique',candidates:[]};if(dt>30)this.history=[];else if(distance(point,[this.last.lon,this.last.lat])/dt>50){this.history=[];this.last=null;return {status:'unknown',reason:'Déplacement GPS incohérent',candidates:[]}}}
   this.last=fix;const candidates=this.candidates(point,fix.accuracy);this.history.push({fix,candidates});this.history=this.history.slice(-6);if(!candidates.length){this.history=[];return {status:'unknown',reason:'Aucun tronçon suffisamment proche',candidates:[]}}
   const routes=[...new Set(candidates.map(c=>c.route_id))];let result={status:'near_track',reason:'Proximité de voie seulement ; présence en rame non établie',routeIds:routes,candidates:candidates.slice(0,30)};
-  if(this.history.length<4||routes.length!==1)return result;
+  if(this.history.length<4)return result;
   const hypotheses=[];for(const c of candidates){let previous=c.progress,valid=true,first=c.progress;for(let i=this.history.length-2;i>=0;i--){const matches=this.history[i].candidates.filter(x=>x.pattern_id===c.pattern_id&&x.progress<=previous+20);if(!matches.length){valid=false;break}const best=matches.reduce((a,b)=>a.distance<b.distance?a:b);previous=best.progress;first=previous}if(valid&&c.progress-first>=150)hypotheses.push(c)}
   if(!hypotheses.length)return result;
+  const supportedRoutes=[...new Set(hypotheses.map(c=>c.route_id))];
+  if(supportedRoutes.length!==1)return {...result,reason:'Plusieurs lignes restent compatibles avec l’historique ; trajet indéterminé'};
   const names=hypotheses.map(c=>{const p=this.patterns.get(c.pattern_id);return {c,p,terminus:this.stops.get(p.stop_ids[p.stop_ids.length-1])?.parent_station||p.stop_ids[p.stop_ids.length-1],next:this.stops.get(c.to_stop_id)?.parent_station||c.to_stop_id}});
-  if(new Set(names.map(x=>x.terminus)).size!==1||new Set(names.map(x=>x.next)).size!==1)return {...result,reason:'Parcours cohérents multiples : sens ou prochaine station indéterminés'};
-  const best=names[0],stop=this.stops.get(best.c.to_stop_id),terminus=this.stops.get(best.p.stop_ids[best.p.stop_ids.length-1]);return {...result,status:'possible_trip',routeId:best.c.route_id,direction:terminus?.stop_name,nextStation:stop?.stop_name,reason:'Progression compatible avec un parcours théorique ; hypothèse expérimentale à confirmer, jamais preuve de rame'};
+  const terminalIds=[...new Set(names.map(x=>x.terminus))],nextIds=[...new Set(names.map(x=>x.next))];
+  const directionStationId=terminalIds.length===1?terminalIds[0]:null,nextStationId=nextIds.length===1?nextIds[0]:null;
+  const direction=directionStationId?this.stops.get(directionStationId)?.stop_name:null,nextStation=nextStationId?this.stops.get(nextStationId)?.stop_name:null;
+  const reason=['Progression compatible avec une ligne théorique',nextStation?'prochaine station commune aux hypothèses':'prochaine station indéterminée',direction?'terminus commun aux hypothèses':'terminus encore ambigu','hypothèse expérimentale, présence en rame non établie'].join(' ; ');
+  return {...result,status:'possible_trip',routeId:supportedRoutes[0],routeIds:supportedRoutes,direction,directionStationId,nextStation,nextStationId,possibleTermini:terminalIds,reason};
  }
- expire(now=Date.now()){if(!this.last||now-this.last.timestamp>15000){this.history=[];return {status:'unknown',reason:'Signal perdu ou ancien : position et progression indéterminées',candidates:[]}}return null}
+ expire(now=Date.now()){if(!this.valid||this.data.service_date!==serviceDate(now)){this.history=[];this.last=null;return {status:'unknown',reason:'Référentiel de service expiré : actualisez-le',candidates:[]}}if(!this.last||now-this.last.timestamp>15000){this.history=[];return {status:'unknown',reason:'Signal perdu ou ancien : position et progression indéterminées',candidates:[]}}return null}
 }
-global.MMIJourney={Engine,project,distance};
+global.MMIJourney={Engine,project,distance,serviceDate};
 })(typeof window==='undefined'?globalThis:window);
