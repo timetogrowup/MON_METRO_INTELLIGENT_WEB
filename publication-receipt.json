@@ -1,6 +1,8 @@
 {
-  "qualifiedDataCommit": "21e860f509db5b105802f09388fd0400d5651fd1",
+  "qualifiedDataCommit": "a0ceb34069ca4750d7e5e28b9eda9256bccb29cf",
+  "qualificationSourceCommit": "41c72f9efee8382b555cbafbb6775901cd1cf1b3",
+  "qualificationRun": "https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/41794108839",
   "serviceDate": "2026-11-04",
-  "indexSha256": "c4f7bc40e98bc9c4803699d67602c0afb3eda3427b943921469cd147ef810207",
+  "indexSha256": "68516f50cd84f3c19adfcb10f29b3f644e1e24b13c47c277edca6ebdac121bee",
   "validUntilUtc": "2026-11-05T23:00:00+00:00"
 }
