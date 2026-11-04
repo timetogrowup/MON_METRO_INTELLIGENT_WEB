@@ -10,7 +10,7 @@ permissions:
   contents: write
 concurrency:
   group: public-idfm-qualified-data
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   qualify-data:
     runs-on: ubuntu-latest
