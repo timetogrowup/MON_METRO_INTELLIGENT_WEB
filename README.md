@@ -1,9 +1,11 @@
-# wenare
+# WENARE
 
-[Ouvrir WENARE](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
+[Ouvrir l’application](https://timetogrowup.github.io/MON_METRO_INTELLIGENT_WEB/)
 
-Je suis ici. Qu’est-ce qui s’offre à moi ? À l’ouverture, WENARE demande votre position puis affiche les trois points de départ couverts les plus proches, tous modes confondus, avec les départs regroupés par ligne et premier arrêt desservi, indépendamment de la destination finale, et les deux prochains passages de chaque groupe. Aucune sélection préalable ; l’autorisation GPS du navigateur peut être nécessaire. Recherche manuelle et suivi métro restent dans les options.
+Géolocalisation à l’ouverture : trois lieux de départ proches, les prochains passages regroupés par ligne et premier arrêt desservi. Aucun itinéraire ni destination à saisir. Recherche manuelle en secours.
 
-Couverture actuelle : métro (16 lignes), RER A–E et pilote bus 20, 21, 26, 38, 91. Le reste des bus, Transilien et tramways ne sont pas couverts. Horaires théoriques, pas de temps réel ni de perturbations connues. Marche indicative sur distance directe, sans garantie d’atteindre un départ.
+Couverture : les 16 lignes de métro, les RER A–E et toutes les lignes de bus actives du catalogue officiel Île-de-France Mobilités, dont les lignes nocturnes. Horaires théoriques uniquement. Au 4 novembre 2026 : 2060 bus au catalogue, 1865 avec passages datés sur la fenêtre ; 92 lignes absentes du GTFS et 103 sans départ daté exploitable. Aucun passage inventé. Ces nombres varient selon la période et la source.
 
-Les fichiers de ligne téléchargés restent utilisables hors ligne jusqu’à expiration. La position est traitée sur l’appareil, sans stockage de trajet. Sources : Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiels officiels (ODbL). [Confidentialité](CONFIDENTIALITE.md).
+Les horaires sont téléchargés par ligne à la demande. Le catalogue compact reste séparé du moteur de trajet métro. Les données expirées sont refusées ; le GPS n’est pas enregistré. Distances directes et marche indicatives, sans garantie d’atteindre le départ. Temps réel, Transilien et tramways restent à intégrer.
+
+Sources : Île-de-France Mobilités — [GTFS](https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/) (Licence Mobilité), [référentiel des lignes](https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes/) (ODbL). Génération et qualification automatiques avant commit ; publication contrôlée séparément.
