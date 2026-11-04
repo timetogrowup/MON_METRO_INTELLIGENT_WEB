@@ -4,6 +4,7 @@
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr').replace(/[’'-]/g,' ');
 function catalogue(data){
  const stops=new Map(data.stops.map(s=>[s.stop_id,s])),lines=new Map(data.lines.map(l=>[l.route_id,l])),byPoint=new Map();
+ for(const [id,route,dest] of data.catalogueServices||[]){const stop=stops.get(id),line=lines.get(route),destination=stops.get(dest);if(!stop||!line||!destination)continue;const list=byPoint.get(id)||[];list.push({key:JSON.stringify([id,route,dest]),stopId:id,lineId:route,lineName:line.route_short_name,directionId:dest,destinationName:destination.stop_name,mode:line.mode,quayName:stop.platform_code||null});byPoint.set(id,list);}
  for(const pattern of data.patterns){const destinationId=pattern.stop_ids.at(-1),destinationName=stops.get(destinationId)?.stop_name;if(!destinationName)continue;
   pattern.stop_ids.forEach((id,i)=>{if(i===pattern.stop_ids.length-1||pattern.stop_rules?.[i]?.pickup_type==='1')return;const s=stops.get(id),line=lines.get(pattern.route_id);if(!s||!line)return;const list=byPoint.get(id)||[];
    const key=JSON.stringify([id,pattern.route_id,destinationId]);if(!list.some(x=>x.key===key))list.push({key,stopId:id,lineId:pattern.route_id,lineName:line.route_short_name,directionId:destinationId,destinationName,mode:line.mode||'metro',quayName:s.platform_code||null});byPoint.set(id,list);
@@ -37,3 +38,4 @@ function validateResponse(body,query){
 }
 return {catalogue,search,nearby,walkingMinutes,instant,presentation,validateResponse};
 });
+
