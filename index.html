@@ -92,8 +92,9 @@ $('demo').onchange=()=>{step=-1;previous=null;if(mode==='demo')mode='none';$('de
 <script>
 (function(){
  const status=document.getElementById('networkStatus');
- MMIReference.read().then(record=>{status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}).catch(e=>{status.textContent='Données indisponibles sur cet appareil. Actualisez le réseau.';document.getElementById('diagnosticReason').textContent=e.message});
- document.getElementById('networkUpdate').onclick=async function(){this.disabled=true;status.textContent='Téléchargement et vérification…';try{const record=await MMIReference.update();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent='Actualisation indisponible ; copie précédente conservée.';document.getElementById('diagnosticReason').textContent=e.message}finally{this.disabled=false}};
+ let networkOperation=0;const initialOperation=networkOperation;
+ MMIReference.read().then(record=>{if(initialOperation!==networkOperation)return;status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}).catch(e=>{status.textContent='Données indisponibles sur cet appareil. Actualisez le réseau.';document.getElementById('diagnosticReason').textContent=e.message});
+ document.getElementById('networkUpdate').onclick=async function(){networkOperation++;this.disabled=true;status.textContent='Téléchargement et vérification…';try{const record=await MMIReference.update();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent='Actualisation indisponible ; copie précédente conservée.';document.getElementById('diagnosticReason').textContent=e.message}finally{this.disabled=false}};
  document.getElementById('networkRollback').onclick=async()=>{try{const record=await MMIReference.rollback();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent=e.message}};
  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.info('Cache interface indisponible',e.message));
 })();
