@@ -1,0 +1,3 @@
+const assert=require('node:assert/strict');require('../network.js');
+(async()=>{const data={schema_version:1,service_date:'2026-11-03',stations:[],patterns:[],lines:[],stops:[],segments:[]};const b=new TextEncoder().encode(JSON.stringify(data));const sha=Buffer.from(await crypto.subtle.digest('SHA-256',b)).toString('hex');const m={schema_version:1,service_date:data.service_date,bytes:b.byteLength,sha256:sha,counts:{stations:0,patterns:0,lines:0,stops:0,segments:0}};assert.deepEqual(await MMIReference.validate(b,m),data);await assert.rejects(MMIReference.validate(b,{...m,sha256:'bad'}));await assert.rejects(MMIReference.validate(b,{...m,counts:{...m.counts,stations:1}}));console.log('Network integrity tests OK')})();
+
