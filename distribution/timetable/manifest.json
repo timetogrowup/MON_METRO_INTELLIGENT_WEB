@@ -4,112 +4,112 @@
   "source": "https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip",
   "attribution": "Île-de-France Mobilités — GTFS — ODbL",
   "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
-  "generatedAtUtc": "2026-11-04T07:44:06.493217+00:00",
-  "referenceDate": "2026-11-04",
-  "networkSha256": "a981f048353aa4897191a257c47500aa49d497a0025d340f27ff0d655e0f5e04",
-  "sourceSha256": "0db767c7df087f8e1ce34c538c1c7da49b46f2eca5f2528c132ccb9841a48454",
-  "validFromUtc": "2026-11-03T23:00:00+00:00",
-  "validUntilUtc": "2026-11-05T23:00:00+00:00",
+  "generatedAtUtc": "2026-11-05T13:17:09.529922+00:00",
+  "referenceDate": "2026-11-05",
+  "networkSha256": "674c0d017c1b41d067427063f48a2e3315608ea1de0d3c4ad02047c25a7a1e89",
+  "sourceSha256": "a7f2fe8b21ebeb894efa5ac60fe449fd7fb9ac0a1809adcb4f91dadf8a7655fa",
+  "validFromUtc": "2026-11-04T23:00:00+00:00",
+  "validUntilUtc": "2026-11-06T23:00:00+00:00",
   "lines": {
     "IDFM:C01371": {
       "file": "IDFM-C01371.json",
-      "bytes": 2720673,
-      "sha256": "c06216e70160aeb14fb949f52eef17d74ea01a8eb36b0a415d0247b383fca360",
+      "bytes": 2589624,
+      "sha256": "22bf77c6a6a5b4bcb76cec710fa9807d7c03ed6fecefd4acd32753eaa05023fd",
       "groups": 48
     },
     "IDFM:C01372": {
       "file": "IDFM-C01372.json",
-      "bytes": 2347784,
-      "sha256": "31851926a24ee5756b352d4de35004d41a93ae5ff27a4ea692242f69dd25947a",
+      "bytes": 2373950,
+      "sha256": "500fad97a8c3b490588a48cff6c4160118c492f8c8eb3955e5d6320160c91ae4",
       "groups": 48
     },
     "IDFM:C01373": {
       "file": "IDFM-C01373.json",
-      "bytes": 2311159,
-      "sha256": "de2a057d27dab2e248f09d024943e9bfec8fd1ff6d93b49cf7c9c66970dfaea4",
+      "bytes": 2338620,
+      "sha256": "7a5bc8241ba48ce088ebf176dca5caf2f22b649738d03e6c6e32a2f07d01f8c7",
       "groups": 48
     },
     "IDFM:C01374": {
       "file": "IDFM-C01374.json",
-      "bytes": 3023801,
-      "sha256": "fa3d40eb927b7deee0d5af7d9bc7bc060e3a7a78ab1d626a22fecf26e07329a4",
+      "bytes": 2980440,
+      "sha256": "eb562918316c809a2c4594f56a2017a6a57bbecac4179264186f055991c8fab6",
       "groups": 56
     },
     "IDFM:C01375": {
       "file": "IDFM-C01375.json",
-      "bytes": 2173757,
-      "sha256": "caa5f94aadcd7d6d9e4698326f657321da35be8c6a6180c75b7768cdb667b2d6",
+      "bytes": 2184946,
+      "sha256": "dea49c318403ac9224bc5e896bc65aecb96228a8690fe776174ac63e3d0fafd2",
       "groups": 42
     },
     "IDFM:C01376": {
       "file": "IDFM-C01376.json",
-      "bytes": 2757593,
-      "sha256": "8686dd8a7c47b149a1a6e3edaa0c0b56ce337742bc08431953336ea2f506fd51",
+      "bytes": 2716474,
+      "sha256": "9a0e6882cfcb8481564b99d19367c0bd51d8fbb245292d4a9f4e392c5aab1e48",
       "groups": 81
     },
     "IDFM:C01377": {
       "file": "IDFM-C01377.json",
-      "bytes": 3297563,
-      "sha256": "a59b458ac18637f284b786cb344a91ed0dc99a7e435fad0420b1fbb8ffbb90fe",
+      "bytes": 3326965,
+      "sha256": "9e689a903465bbb1524ff86179e2d451ae391df1eb1ff7d159b515070dd0b785",
       "groups": 132
     },
     "IDFM:C01378": {
       "file": "IDFM-C01378.json",
-      "bytes": 3050373,
-      "sha256": "ca5686a4b6ce8229ea9091456a5cde14a582b5c92c2d2db1ea8dbfc87e1c1c1e",
+      "bytes": 3102625,
+      "sha256": "1f3321f5b0e2cc6de336abd41a4f14cfac2a08df375999b8de967e9d9e24b1c0",
       "groups": 107
     },
     "IDFM:C01379": {
       "file": "IDFM-C01379.json",
-      "bytes": 3534914,
-      "sha256": "d88854b5c539dc989914ff00183b4a506decfbe671ae2353490777e80993f0ea",
+      "bytes": 3576538,
+      "sha256": "81e5c66261b59a6aa734ec5db7248bb60677def6c3502051eacb54c95ce8f45c",
       "groups": 105
     },
     "IDFM:C01380": {
       "file": "IDFM-C01380.json",
-      "bytes": 1244442,
-      "sha256": "204025868e53a515ef4556ec6aa3efc9b215e046b4088e4112eac0b5310eda59",
+      "bytes": 1299325,
+      "sha256": "66ca299e792a3c3cd124cc561bd41e566bb14c338fe1a2cc6333dae24a117033",
       "groups": 39
     },
     "IDFM:C01381": {
       "file": "IDFM-C01381.json",
-      "bytes": 1773977,
-      "sha256": "a5a14c4e490cff7b76715c17298d2b4242c8350ec8b9cbbaec0f22aa64901aa8",
+      "bytes": 1787280,
+      "sha256": "dd611fe1a84e0794552e9152a03dea872e7bad52916747c25b666665eeb233db",
       "groups": 36
     },
     "IDFM:C01382": {
       "file": "IDFM-C01382.json",
-      "bytes": 2678942,
-      "sha256": "6f6b7da99ee38228dff26eb970609d9b1d126e95554d1872bc9f658e93f8fdc2",
+      "bytes": 2732249,
+      "sha256": "06a5914d03e8d48ec4ec7185070bc9d146ac287e2963d503971d33e186c3ec0f",
       "groups": 60
     },
     "IDFM:C01383": {
       "file": "IDFM-C01383.json",
-      "bytes": 2822435,
-      "sha256": "a0914e0ff56d6a40c1198482d20b501d8f58dba535111d8189202a7595d84263",
+      "bytes": 2832930,
+      "sha256": "31a0e98a4b4079c6377c1bae23aed044e6a77d85313252897342332b6b787711",
       "groups": 80
     },
     "IDFM:C01384": {
       "file": "IDFM-C01384.json",
-      "bytes": 2179566,
-      "sha256": "eae652df2729f58e86885bcd3847e67cecd0edbdef31418aef65a0fd72a4e368",
+      "bytes": 2157205,
+      "sha256": "25b72f05d4411c8099d2ab29e9435bea7bc02934565eaf8dbb1237ff34f3a613",
       "groups": 40
     },
     "IDFM:C01386": {
       "file": "IDFM-C01386.json",
-      "bytes": 194709,
-      "sha256": "98e0131ace15787e909ad01cd06a3199d29efa0bacc9ccb88f65973f49816351",
+      "bytes": 202584,
+      "sha256": "f9c1207674c267206c87289740b01cfc7030ea85c49320d09e726c291a78f7a5",
       "groups": 6
     },
     "IDFM:C01387": {
       "file": "IDFM-C01387.json",
-      "bytes": 296282,
-      "sha256": "bb428b1c7478bae82ff951e69fe53d80ab9b3031c8bc098fc0aa5319029ffe75",
+      "bytes": 291408,
+      "sha256": "89165a09711be4be195f4d992c49169e50a82c876c6d882f2ea6da344e8cedbe",
       "groups": 12
     }
   },
   "qa": {
-    "departures": 570032,
+    "departures": 571387,
     "groups": 940,
     "excluded_frequency_trips": 0,
     "unmatched_reference_events": 0
