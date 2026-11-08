@@ -1,0 +1,35 @@
+/* Composition-only movement, with static readable contents and shared lifecycle. */
+body{isolation:isolate}body>main{position:relative;z-index:1}
+.motion-plane{position:fixed;z-index:0;pointer-events:none;width:clamp(180px,38vw,480px);height:clamp(180px,40vh,420px);border-radius:50%;opacity:var(--motion-bg-opacity,.06);background:var(--motion-fill-a,radial-gradient(ellipse,var(--wenare-accent),transparent 70%));animation:motion-drift var(--motion-bg-time,24s) ease-in-out infinite alternate;animation-play-state:paused;transform:translate(0,0)}
+.motion-plane[data-plane="a"]{top:6%;left:0}.motion-plane[data-plane="b"]{bottom:24px;right:24px;background:var(--motion-fill-b,radial-gradient(ellipse,var(--wenare-ink),transparent 70%));animation-direction:alternate-reverse}
+.motion-logo{display:inline-grid;place-items:center;width:44px;height:44px;flex-shrink:0;transform-origin:center;animation:motion-breathe var(--motion-logo-time,5s) ease-in-out infinite;animation-play-state:paused}
+html[data-motion-logo="sway"] .motion-logo{animation-name:motion-sway}
+html[data-motion="running"][data-motion-modal="false"][data-motion-limited="false"] .motion-plane,html[data-motion="running"][data-motion-modal="false"][data-motion-limited="false"] .motion-logo.motion-visible{animation-play-state:running;will-change:transform}
+html[data-motion="waiting"] .motion-plane{visibility:hidden}
+html[data-motion="reduced"] :is(.motion-plane,.motion-logo),html[data-motion-limited="true"] :is(.motion-plane,.motion-logo){animation:none}
+html[data-motion]:not([data-motion="reduced"]):not([data-motion="waiting"]) body button:not(#styleReel){transition:background-color 160ms ease-out,border-color 160ms ease-out,box-shadow 160ms ease-out}
+html.motion-theme-changing .motion-plane{transition:opacity 250ms ease-out}
+html[data-wenare-style="pop"]{--motion-fill-a:radial-gradient(circle,#e23a92 0 55%,transparent 56%);--motion-fill-b:radial-gradient(circle,#ffbd3a 0 55%,transparent 56%)}
+html[data-wenare-style="funk"]{--motion-fill-a:linear-gradient(135deg,#813099,#c9429c);--motion-fill-b:linear-gradient(135deg,#e38b1e,#ffca45)}
+html[data-wenare-style="funk"] .motion-plane{border-radius:35% 65% 55% 45%}
+html[data-wenare-style="reggae"]{--motion-fill-a:linear-gradient(150deg,transparent 30%,#216339 45% 65%,transparent 80%);--motion-fill-b:linear-gradient(150deg,transparent 30%,#d9af27 45% 65%,transparent 80%)}
+html[data-wenare-style="rock"]{--motion-fill-a:linear-gradient(125deg,transparent 30%,#e16972 31% 50%,transparent 51%);--motion-fill-b:linear-gradient(125deg,transparent 30%,#a92c32 31% 50%,transparent 51%)}
+html[data-wenare-style="jazz"]{--motion-fill-a:radial-gradient(ellipse,#a67638,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#ca9e57,transparent 65%)}
+html[data-wenare-style="electro"]{--motion-fill-a:radial-gradient(ellipse,#be80ff,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#55d8e7,transparent 65%)}
+html[data-wenare-style="electro"] .motion-logo{filter:drop-shadow(0 0 4px #b786f030)}
+html[data-wenare-style="bossa"]{--motion-fill-a:radial-gradient(ellipse,#70b6a1,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#d8bb7c,transparent 65%)}
+html[data-wenare-style="soul"]{--motion-fill-a:radial-gradient(ellipse,#c2608a,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#a783ba,transparent 65%)}
+html[data-wenare-style="folk"]{--motion-fill-a:radial-gradient(ellipse,transparent 40%,#657537 41% 48%,transparent 49%);--motion-fill-b:radial-gradient(ellipse,transparent 40%,#aa8b42 41% 48%,transparent 49%)}
+html[data-wenare-style="lofi"]{--motion-fill-a:radial-gradient(ellipse,#52618d,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#9b8bab,transparent 65%)}
+html[data-wenare-style="ambient"]{--motion-fill-a:radial-gradient(ellipse,#b4a6e2,transparent 65%);--motion-fill-b:radial-gradient(ellipse,#a6c6e4,transparent 65%)}
+html:is([data-wenare-style="ambient"],[data-wenare-style="bossa"]) .motion-plane{animation-name:motion-orbit;animation-direction:normal}
+html[data-wenare-style="swing"]{--motion-fill-a:radial-gradient(ellipse,transparent 40%,#166a80 41% 48%,transparent 49%);--motion-fill-b:radial-gradient(ellipse,transparent 40%,#d5aa49 41% 48%,transparent 49%)}
+:is(.places-position,.walk-location).motion-visible::after{content:'';position:absolute;inset:-7px;border-radius:50%;background:var(--wenare-accent);pointer-events:none;animation:motion-halo 3s ease-in-out infinite;animation-play-state:paused}
+html[data-motion="running"] :is(.places-position,.walk-location).motion-visible::after{animation-play-state:running}
+html[data-motion-limited="true"] :is(.places-position,.walk-location)::after,html[data-motion="reduced"] :is(.places-position,.walk-location)::after{display:none}
+@keyframes motion-drift{from{transform:translate(0,0)}to{transform:translate(var(--motion-bg-travel,18px),calc(var(--motion-bg-travel,18px)*.5))}}
+@keyframes motion-orbit{0%,100%{transform:translate(0,0)}25%{transform:translate(var(--motion-bg-travel),0)}50%{transform:translate(var(--motion-bg-travel),calc(var(--motion-bg-travel)*.5))}75%{transform:translate(0,calc(var(--motion-bg-travel)*.5))}}
+@keyframes motion-breathe{0%,100%{transform:scale(1)}50%{transform:scale(var(--motion-logo-scale,1.02))}}
+@keyframes motion-sway{0%,100%{transform:rotate(calc(var(--motion-logo-angle)*-1))}50%{transform:rotate(var(--motion-logo-angle))}}
+@keyframes motion-halo{0%,100%{transform:scale(1);opacity:.18}50%{transform:scale(1.35);opacity:.04}}
+@media(prefers-reduced-motion:reduce){.motion-plane,.motion-logo{animation:none!important}html[data-motion] body button{transition:none}:is(.places-position,.walk-location)::after{display:none}}

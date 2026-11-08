@@ -39,6 +39,7 @@ function render(force=false){
  $('opportunityOverview').append(section);
  }
  if(catalogue){const note=el('small','Couverture partielle · catalogue du '+new Date(catalogue.manifest.collectedAt).toLocaleDateString('fr-FR')+' · lieux référencés, disponibilités non confirmées.','opportunity-foot');$('opportunityOverview').append(note);}
+ window.WenareMotion?.cards($('opportunityOverview'));
  resultCount=total;radiusStatus();$('domainResultsStatus').textContent=p&&!stopped?(category==='all'?total+' autres lieux proposés':total+' lieu'+(total>1?'x':'')+' proposé'+(total>1?'s':'')):'Position nécessaire pour les autres domaines.';
 }
 async function load(){controller?.abort();controller=new AbortController();const mine=++request;try{const next=await core.load(controller.signal);if(mine!==request||stopped)return;catalogue=next;error=null;render(true);if(snapshot?.position)window.WenareOverview?.refreshDomain();}catch(e){if(mine!==request||e.name==='AbortError')return;error='Catalogue indisponible ou expiré. Réessayez avec une connexion.';render(true);}finally{if(mine===request)controller=null;}}
