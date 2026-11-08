@@ -1,6 +1,6 @@
 # Opportunités autour de soi
 
-Cette livraison ajoute neuf domaines au transport : manger, sorties, découverte, besoins immédiats, sport, commerces/services, lieux où se poser, hébergement et pharmacies. Les résultats sont des références sourcées, pas des disponibilités garanties. Trois lieux au maximum par domaine, rayon partagé 250/500/1000/3000 m, calcul GPS local et détail accessible.
+Cette livraison ajoute neuf domaines au transport : manger, sorties, découverte, besoins immédiats, sport, commerces/services, lieux où se poser, hébergement et pharmacies. Les résultats sont des références sourcées, pas des disponibilités garanties. Tous les lieux référencés admissibles par domaine, sans limite de nombre, rayon partagé 250/500/1000/3000 m, calcul GPS local et détail accessible.
 
 ## Données et droits
 - DATAtourisme Île-de-France : Licence Ouverte 2.0, attribution au producteur conservée dans chaque fiche. Export public CSV, sans clé. https://www.datatourisme.fr/faq/
@@ -18,4 +18,4 @@ Le workflow opportunities.yml qualifie les modifications et renouvelle le catalo
 Sources ouvertes sans achat d'API ni contrat payant. Coûts d'hébergement, trafic et maintenance distincts ; pas de garantie de gratuité illimitée des infrastructures. Aucun GPS envoyé à DATAtourisme, Paris Data ou Overpass ; aucune coordonnée persistée. Liens externes ouverts seulement par action utilisateur, sans géolocalisation ajoutée dans l'URL.
 
 ## Validation
-Tests Python de normalisation/licences d'accès/états fermés, tests Node d'intégrité des neuf paquets, bornes des rayons, filtrage du jour, sûreté des liens et expiration. Recette Chromium/WebKit : dix boutons, rayon partagé, détails/clavier, plafonds de résultats, refus/arrêt, panne fournisseur et absence d'appel fournisseur/GPS supplémentaire. La recette physique sur Android/iPhone reste distincte.
+Tests Python de normalisation/licences d'accès/états fermés, tests Node d'intégrité des neuf paquets, bornes des rayons et absence de limite de nombre, filtrage du jour, sûreté des liens et expiration. Recette Chromium/WebKit : dix boutons, rayon partagé, détails/clavier, exhaustivité des résultats dans le rayon, refus/arrêt, panne fournisseur et absence d'appel fournisseur/GPS supplémentaire. La recette physique sur Android/iPhone reste distincte.
