@@ -52,7 +52,7 @@ jobs:
           path: distribution/opportunities/manifest.json
       - name: Publier uniquement un catalogue qualifié
         id: data
-        if: github.event_name != 'push' && github.repository == 'timetogrowup/MON_METRO_INTELLIGENT_WEB'
+        if: github.event_name != 'push' && github.repository == 'timetogrowup/WENARE'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
