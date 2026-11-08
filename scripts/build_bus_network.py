@@ -36,7 +36,7 @@ def main():
         (ROOT/name).write_bytes(b);files[line]={'file':name,'bytes':len(b),'sha256':digest(b),'groups':len(p['groups'])}
     qa['coverage']={state:sum(s==state for s in statuses.values()) for state in set(statuses.values())}
     qa['busLines']=sum(v['mode']=='bus' for v in lines.values())
-    m={'schemaVersion':2,'catalogueVersion':3,'quality':'timetable','source':URL,
+    m={'directionVersion':1,'schemaVersion':2,'catalogueVersion':3,'quality':'timetable','source':URL,
        'attribution':'Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiel des lignes (ODbL)',
        'sourcePage':'https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/',
        'license_url':'https://cloud.fabmob.io/s/eYWWJBdM3fQiFNm',

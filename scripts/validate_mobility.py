@@ -1,3 +1,4 @@
+from build_timetable import validate_directions
 """Validate isolated consultation data, exact pilot scope and all event bindings."""
 import datetime as dt, hashlib, json, pathlib, re
 from build_mobility import SCOPE
@@ -35,7 +36,7 @@ def check(root=pathlib.Path('distribution/mobility'),now=None):
     for line,meta in m['lines'].items():
         assert meta['file']==line.replace(':','-')+'.json'
         raw=(root/meta['file']).read_bytes();assert len(raw)==meta['bytes'] and len(raw)<=8_000_000 and hashlib.sha256(raw).hexdigest()==meta['sha256']
-        package=json.loads(raw);assert package['schemaVersion']==m['schemaVersion'] and package['lineId']==line and package['validFromUtc']==m['validFromUtc'] and package['validUntilUtc']==m['validUntilUtc']
+        package=json.loads(raw);validate_directions(package,m.get('directionVersion')==1);assert package['schemaVersion']==m['schemaVersion'] and package['lineId']==line and package['validFromUtc']==m['validFromUtc'] and package['validUntilUtc']==m['validUntilUtc']
         count=0
         for key,rows in package['groups'].items():
             stop,route,dest=json.loads(key);assert route==line and (stop,route,dest) in allowed and rows

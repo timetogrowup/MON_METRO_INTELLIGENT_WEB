@@ -1,3 +1,4 @@
+from build_timetable import validate_directions
 """Closed regional contract: official scope, provenance, bindings, dates and hashes."""
 import datetime as dt, hashlib, json, pathlib, re
 from build_bus_network import INDEX_LIMIT
@@ -33,7 +34,7 @@ def check(root=pathlib.Path('distribution/mobility'),now=None):
     for line,meta in m['lines'].items():
         assert meta['file']==line.replace(':','-')+'.json'
         b=(root/meta['file']).read_bytes();assert len(b)==meta['bytes'] and len(b)<=8_000_000 and hashlib.sha256(b).hexdigest()==meta['sha256']
-        p=json.loads(b);assert p['schemaVersion']==2 and p['lineId']==line and p['validFromUtc']==m['validFromUtc'] and p['validUntilUtc']==m['validUntilUtc']
+        p=json.loads(b);validate_directions(p,m.get('directionVersion')==1);assert p['schemaVersion']==2 and p['lineId']==line and p['validFromUtc']==m['validFromUtc'] and p['validUntilUtc']==m['validUntilUtc']
         state=d['coverage'][line];assert state in ('dated_departures','no_dated_departures','absent_from_gtfs')
         assert bool(p['groups'])==(state=='dated_departures');coverage[state]=coverage.get(state,0)+1
         count=0

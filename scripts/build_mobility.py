@@ -2,7 +2,7 @@
 import collections, datetime as dt, gzip, hashlib, json, pathlib, urllib.request, zipfile
 from zoneinfo import ZoneInfo
 from build_gtfs import records, service_day, URL
-from build_timetable import active_services, instant, seconds, next_visit
+from build_timetable import active_services, instant, seconds, next_visit, trip_direction
 
 ROOT=pathlib.Path('distribution/mobility')
 LINE_URL='https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/referentiel-des-lignes/exports/json'
@@ -42,7 +42,7 @@ def build(z,source_lines,day,all_bus=False):
     start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=2),dt.time(),TZ).timestamp())
     bounds={'validFromUtc':dt.datetime.fromtimestamp(start,UTC).isoformat(),'validUntilUtc':dt.datetime.fromtimestamp(end,UTC).isoformat()}
     stops={r['stop_id']:r for r in records(z,'stops')}
-    groups={k:{} for k in lines};patterns={};used=set();omitted_conditional=0
+    directions={k:{} for k in lines};groups={k:{} for k in lines};patterns={};used=set();omitted_conditional=0
     for tid,raw in rows.items():
         seq=sorted(raw,key=lambda r:int(r['stop_sequence']));trip=trips[tid];line=trip['route_id'];destination=seq[-1]['stop_id']
         if len(seq)<2 or len({r['stop_sequence'] for r in seq})!=len(seq):raise ValueError('Invalid sequence')
@@ -64,6 +64,7 @@ def build(z,source_lines,day,all_bus=False):
         used.update(r['stop_id'] for r in seq)
         for r,stamp,date in valid_rows:
             key=json.dumps([r['stop_id'],line,destination],separators=(',',':'))
+            directions[line][tripref]=trip_direction(trip)
             groups[line].setdefault(key,[]).append([stamp,date,tripref,int(r['stop_sequence']),*nexts[int(r['stop_sequence'])]])
     stops={r['stop_id']:r for r in records(z,'stops')};parents={stops[s].get('parent_station') or s for s in used}
     selected={k:stops[k] for k in used|parents}
@@ -78,7 +79,7 @@ def build(z,source_lines,day,all_bus=False):
     for line,values in sorted(groups.items()):
         if not values and not all_bus:raise ValueError('No dated departures for pilot line '+line)
         for seq in values.values():seq.sort()
-        packages[line]={'schemaVersion':2,'lineId':line,**bounds,'groups':values}
+        packages[line]={'directionVersion':1,'tripDirections':directions[line],'schemaVersion':2,'lineId':line,**bounds,'groups':values}
         counts[line]={'groups':len(values),'departures':sum(map(len,values.values()))}
     return index,packages,{'lines':counts,'excluded_frequency_trips':len(freq&trips.keys()),'excluded_conditional_boarding_rows':omitted_conditional}
 
@@ -97,7 +98,7 @@ def main():
         name=line.replace(':','-')+'.json';payload=encoded(data)
         if len(payload)>8_000_000:raise ValueError('Line package budget exceeded '+line)
         (ROOT/name).write_bytes(payload);files[line]={'file':name,'bytes':len(payload),'sha256':digest(payload),'groups':len(data['groups'])}
-    manifest={'schemaVersion':2,'quality':'timetable','source':URL,'attribution':'Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiel des lignes (ODbL)','sourcePage':'https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/','license_url':'https://cloud.fabmob.io/s/eYWWJBdM3fQiFNm','lineSource':LINE_URL,'lineSourceSha256':digest(raw),'sourceSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'networkSha256':digest(index_raw),'index':{'file':'index.json','bytes':len(index_raw),'sha256':digest(index_raw)},'generatedAtUtc':dt.datetime.now(UTC).isoformat(),'referenceDate':str(day),'validFromUtc':index['validFromUtc'],'validUntilUtc':index['validUntilUtc'],'lines':files,'scope':SCOPE,'qa':qa,'limitations':['Consultation only. RER A-E and bus 20/21/26/38/91 pilot, not all buses.','Theoretical schedules; no disruption, live location or boarding inference.','Conditional boarding and frequency-based services omitted.']}
+    manifest={'directionVersion':1,'schemaVersion':2,'quality':'timetable','source':URL,'attribution':'Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiel des lignes (ODbL)','sourcePage':'https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/','license_url':'https://cloud.fabmob.io/s/eYWWJBdM3fQiFNm','lineSource':LINE_URL,'lineSourceSha256':digest(raw),'sourceSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'networkSha256':digest(index_raw),'index':{'file':'index.json','bytes':len(index_raw),'sha256':digest(index_raw)},'generatedAtUtc':dt.datetime.now(UTC).isoformat(),'referenceDate':str(day),'validFromUtc':index['validFromUtc'],'validUntilUtc':index['validUntilUtc'],'lines':files,'scope':SCOPE,'qa':qa,'limitations':['Consultation only. RER A-E and bus 20/21/26/38/91 pilot, not all buses.','Theoretical schedules; no disruption, live location or boarding inference.','Conditional boarding and frequency-based services omitted.']}
     (ROOT/'manifest.json').write_bytes(encoded(manifest));print('MOBILITY_BUILT',json.dumps({'indexBytes':len(index_raw),'packages':files,'qa':qa}))
 
 if __name__=='__main__':main()

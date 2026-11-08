@@ -18,11 +18,13 @@ class Timetable(unittest.TestCase):
   with zipfile.ZipFile(content,'w') as z:
    z.writestr('agency.txt','agency_id,agency_timezone\na,Europe/Paris\n')
    z.writestr('routes.txt','route_id,agency_id\nIDFM:C01371,a\nIDFM:C01374,a\n')
-   z.writestr('trips.txt','trip_id,route_id,service_id\nt1,IDFM:C01371,previous\nt4,IDFM:C01374,today\n')
+   z.writestr('trips.txt','trip_id,route_id,service_id,direction_id\nt1,IDFM:C01371,previous,0\nt4,IDFM:C01374,today,1\n')
    z.writestr('calendar_dates.txt','service_id,date,exception_type\nprevious,20261102,1\ntoday,20261103,1\n')
    z.writestr('stop_times.txt','trip_id,stop_sequence,stop_id,departure_time,pickup_type\nt1,1,s,25:10:00,0\nt1,2,d,25:20:00,1\nt4,1,s,12:00:00,0\nt4,2,d,12:10:00,1\n')
   network={'lines':[{'route_id':line,'route_type':'1'} for line in ['IDFM:C01371','IDFM:C01374']],'patterns':[{'route_id':line,'stop_ids':['s','d']} for line in ['IDFM:C01371','IDFM:C01374']]}
   with zipfile.ZipFile(content) as z:result,qa=build(z,network,dt.date(2026,11,3))
+  import hashlib
+  self.assertEqual(result['IDFM:C01371']['tripDirections'][hashlib.sha256(b't1').hexdigest()[:16]],'0');self.assertEqual(result['IDFM:C01374']['tripDirections'][hashlib.sha256(b't4').hexdigest()[:16]],'1')
   self.assertEqual(qa['departures'],2);row=next(iter(result['IDFM:C01371']['groups'].values()))[0];self.assertEqual(row[1],'2026-11-02');self.assertEqual(row[0],instant(dt.date(2026,11,2),'25:10:00'))
  def test_publication_validator_rejects_stale_and_corrupt(self):
   import tempfile,json,hashlib

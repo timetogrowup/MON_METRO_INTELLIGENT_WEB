@@ -36,6 +36,19 @@ def next_visit(ids,rules,numbers,index,stops):
         if place!=current:return ids[j],numbers[j]
     return None
 
+
+def trip_direction(trip):
+    value=trip.get('direction_id','')
+    if value not in ('','0','1',None):raise ValueError('Invalid GTFS direction_id')
+    return value if value in ('0','1') else None
+
+def validate_directions(data,required=False):
+    if not required and data.get('directionVersion')!=1:return
+    assert data.get('directionVersion')==1 and isinstance(data.get('tripDirections'),dict),'Missing GTFS directions'
+    refs={row[2] for rows in data['groups'].values() for row in rows}
+    assert set(data['tripDirections'])==refs,'Incomplete GTFS direction bindings'
+    assert all(value in ('0','1',None) for value in data['tripDirections'].values()),'Invalid GTFS direction value'
+
 def build(z,network,day):
     scope=metro_scope(network)
     agencies={r['agency_id']:r['agency_timezone'] for r in records(z,'agency')}
@@ -60,7 +73,7 @@ def build(z,network,day):
         for i,s in enumerate(p['stop_ids'][:-1]):
             if p.get('stop_rules',[{}]*len(p['stop_ids']))[i].get('pickup_type','0')!='1':allowed.add((s,p['route_id'],p['stop_ids'][-1]))
     start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=2),dt.time(),TZ).timestamp())
-    groups={line:{} for line in scope};count=0;unmatched=0;trip_ids=sorted(rows)
+    directions={line:{} for line in scope};groups={line:{} for line in scope};count=0;unmatched=0;trip_ids=sorted(rows)
     for tid in trip_ids:
         seq=sorted(rows[tid]);trip=trips[tid]
         if len(seq)<2 or len({x[0] for x in seq})!=len(seq):raise ValueError('Invalid timetable sequence')
@@ -76,12 +89,13 @@ def build(z,network,day):
                 if not start<=time<end:continue
                 key=(stop,trip['route_id'],destination)
                 if key not in allowed or (stops and nexts[number][0] not in stops):unmatched+=1;continue
+                directions[trip['route_id']][tripref]=trip_direction(trip)
                 encoded=json.dumps(key,separators=(',',':'));groups[trip['route_id']].setdefault(encoded,[]).append([time,str(d),tripref,number,*nexts[number]]);count+=1
     result={}
     for line,values in groups.items():
         if not values:raise ValueError('Empty metro timetable')
         for values_list in values.values():values_list.sort()
-        result[line]={'schemaVersion':2,'lineId':line,'validFromUtc':dt.datetime.fromtimestamp(start,UTC).isoformat(),'validUntilUtc':dt.datetime.fromtimestamp(end,UTC).isoformat(),'groups':values}
+        result[line]={'directionVersion':1,'tripDirections':directions[line],'schemaVersion':2,'lineId':line,'validFromUtc':dt.datetime.fromtimestamp(start,UTC).isoformat(),'validUntilUtc':dt.datetime.fromtimestamp(end,UTC).isoformat(),'groups':values}
     return result,{'departures':count,'groups':sum(len(g) for g in groups.values()),'excluded_frequency_trips':len(frequencies&trips.keys()),'unmatched_reference_events':unmatched}
 
 def main():
@@ -95,7 +109,7 @@ def main():
         name=line.replace(':','-')+'.json';encoded=(json.dumps(payload,ensure_ascii=False,separators=(',',':'))+'\n').encode()
         if len(encoded)>8_000_000:raise ValueError('Timetable exceeds per-line budget')
         (target/name).write_bytes(encoded);files[line]={'file':name,'bytes':len(encoded),'sha256':hashlib.sha256(encoded).hexdigest(),'groups':len(payload['groups'])}
-    manifest={'schemaVersion':2,'quality':'timetable','source':URL,'attribution':'Île-de-France Mobilités — GTFS — ODbL','license_url':'https://opendatacommons.org/licenses/odbl/1-0/','generatedAtUtc':dt.datetime.now(UTC).isoformat(),'referenceDate':str(day),'networkSha256':hashlib.sha256(network_bytes).hexdigest(),'sourceSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'validFromUtc':next(iter(result.values()))['validFromUtc'],'validUntilUtc':next(iter(result.values()))['validUntilUtc'],'lines':files,'qa':qa,'limitations':['Theoretical schedules only; no disruptions or live estimates.','Metro lines in the current reference; only matching boarding services.','Frequency-based trips excluded; empty results do not prove end of service.']}
+    manifest={'directionVersion':1,'schemaVersion':2,'quality':'timetable','source':URL,'attribution':'Île-de-France Mobilités — GTFS — ODbL','license_url':'https://opendatacommons.org/licenses/odbl/1-0/','generatedAtUtc':dt.datetime.now(UTC).isoformat(),'referenceDate':str(day),'networkSha256':hashlib.sha256(network_bytes).hexdigest(),'sourceSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'validFromUtc':next(iter(result.values()))['validFromUtc'],'validUntilUtc':next(iter(result.values()))['validUntilUtc'],'lines':files,'qa':qa,'limitations':['Theoretical schedules only; no disruptions or live estimates.','Metro lines in the current reference; only matching boarding services.','Frequency-based trips excluded; empty results do not prove end of service.']}
     (target/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n');print('TIMETABLE_OK',json.dumps(qa))
 if __name__=='__main__':main()
 

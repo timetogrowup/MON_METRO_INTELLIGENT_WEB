@@ -1,3 +1,4 @@
+from build_timetable import validate_directions
 """Fail-closed validation for the optional theoretical pilot; independent of metro schema 1."""
 import datetime as dt,hashlib,json,pathlib,re
 from build_timetable import metro_scope,next_visit
@@ -22,7 +23,7 @@ def check(root=pathlib.Path('distribution'),now=None):
     for line,meta in m['lines'].items():
         assert meta['file']==line.replace(':','-')+'.json','Unexpected file'
         raw=(target/meta['file']).read_bytes();assert len(raw)==meta['bytes'] and len(raw)<=8_000_000 and hashlib.sha256(raw).hexdigest()==meta['sha256'],'Invalid timetable blob'
-        d=json.loads(raw);assert d['schemaVersion']==m['schemaVersion'] and d['lineId']==line and d['validFromUtc']==m['validFromUtc'] and d['validUntilUtc']==m['validUntilUtc'],'Invalid line contract'
+        d=json.loads(raw);validate_directions(d,m.get('directionVersion')==1);assert d['schemaVersion']==m['schemaVersion'] and d['lineId']==line and d['validFromUtc']==m['validFromUtc'] and d['validUntilUtc']==m['validUntilUtc'],'Invalid line contract'
         for key,rows in d['groups'].items():
             stop,route,destination=json.loads(key);assert stop and destination and route==line and rows and (stop,route,destination) in allowed,'Invalid group/reference'
             previous=0

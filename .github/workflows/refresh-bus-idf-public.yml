@@ -33,7 +33,7 @@ jobs:
           python - <<'PYTHON'
           import json,os,pathlib,shutil
           m=json.loads(pathlib.Path('distribution/mobility/manifest.json').read_text())
-          initial=m.get('catalogueVersion')!=3
+          initial=m.get('catalogueVersion')!=3 or m.get('directionVersion')!=1
           if initial:
               for p in pathlib.Path('release-client').iterdir():
                   if p.is_file():shutil.copyfile(p,pathlib.Path(p.name))
@@ -99,7 +99,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add distribution/
           if [ "${{ steps.migration.outputs.initial }}" = "true" ]; then
-            git add index.html sw.js mobility.js departures.js departures-ui.js nearby-ui.js
+            git add index.html sw.js mobility.js departures.js departures-ui.js nearby-ui.js nearby.js timetable.js
           fi
           if ! git diff --cached --quiet; then
             git commit -m "data: actualiser les horaires qualifiés de tous les bus IDFM"
