@@ -1,4 +1,4 @@
-# Carte des lieux — WENARE v26, 8 novembre 2026
+# Carte des lieux — WENARE v27, 8 novembre 2026
 
 ## Besoin métier
 Sous le rayon de droite, l’accès « Carte » affiche les lieux de la liste et la position de l’utilisateur. Les dix domaines partagent des couleurs stables entre leurs boutons et leurs épingles, avec pictogrammes et noms. Le rayon et le domaine restent identiques dans les vues liste et carte. Les règles de transport sont conservées ; aucun plafond de trois lieux n’est ajouté aux autres domaines.
@@ -13,3 +13,6 @@ Les lieux sont référencés, avec disponibilité non confirmée ; les coordonn�
 
 ## Validation
 Tests Node : palette de dix couleurs, filtrage exact et inclusif, doublons et coordonnées invalides, regroupement sans perte de 2 000 lieux et points superposés. Recette navigateur automatisée : correspondance carte/liste, six rayons, catégories, fiches, groupes, guidage à pied, fermeture/réouverture, focus, largeur 320 px, refus GPS et fond indisponible. Recette visuelle locale sur coordonnées de test à Carrières-sous-Poissy ; aucun essai GPS physique revendiqué.
+
+## Correctif de recette mobile
+Les fiches et listes de groupes sont affichées dans un panneau sous le plan, dans le dialogue, afin de garder les actions tactiles accessibles à 320 px sans superposition de popup Leaflet. La sélection d’un groupe puis d’un lieu remplace ce panneau ; changer de filtre le referme. Recette tactile corrigée : accès au guidage depuis la fiche sous le plan.
