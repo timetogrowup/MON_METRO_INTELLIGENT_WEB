@@ -4,3 +4,5 @@ body button{background:var(--wenare-accent);color:#fff}body button.secondary,bod
 @media(prefers-reduced-motion:reduce){.style-track{will-change:auto}}
 
 header{flex-wrap:wrap}header>div{flex:1;min-width:180px}body .style-change{flex-shrink:0}body .style-reel{background:#faf4e8;color:#242039}
+
+html body header{background:var(--wenare-surface);color:var(--wenare-ink);border-bottom:3px solid var(--wenare-accent)}html body header p{color:var(--wenare-ink)}html body button[aria-pressed="true"]{background:var(--wenare-accent);color:#fff}html body .opportunity-summary,html body .opportunity-empty,html body .places-map-open,html body .domain-button{background:var(--wenare-surface);color:var(--wenare-ink)}html body .opportunity-summary:hover{background:var(--wenare-page)}html body .opportunity-status{color:var(--wenare-accent)}html body .opportunity-meta,html body .opportunity-distance,html body .opportunity-source,html body .opportunity-count,html body #domainResultsStatus{color:var(--wenare-ink)}html body .opportunity-chip{background:var(--wenare-page);color:var(--wenare-ink)}
