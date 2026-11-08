@@ -47,6 +47,7 @@ function render(){
 
  summary.append(row1,row2,row3);const detail=element('div',undefined,'place-detail');detail.id=detailId;detail.hidden=!open;
  detail.append(element('p',Math.ceil(place.distance)+' m à vol d’oiseau · '+walk+' de marche indicative','muted'),list,element('small',(partial?'⚠ Certains horaires sont indisponibles · ':'')+'Horaires théoriques · 60 prochaines minutes · lignes au point utile le plus proche · perturbations non connues'));
+ const walking=element('button','🚶 Y aller à pied','walk-button');walking.type='button';walking.onclick=()=>window.WenareWalkingUI?.open(place);detail.append(walking);
  summary.onclick=()=>{if(expanded.has(place.id))expanded.delete(place.id);else expanded.add(place.id);render();};
  card.append(summary,detail);$(target).append(card);
  }

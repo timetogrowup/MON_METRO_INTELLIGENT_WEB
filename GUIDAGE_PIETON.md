@@ -1,0 +1,12 @@
+# Guidage à pied — V1
+## Besoin
+Après sélection d’un lieu, rejoindre ce lieu à pied sur un plan WENARE. Google mis de côté. Transport : sélection, horaires et regroupements inchangés. Autres domaines : aucun plafond de trois lieux.
+## Réalisation
+Bouton dans les détails des lieux et des points transport. Dialogue accessible fermé par Fermer ou Échap. Affichage du fournisseur et des transmissions avant calcul explicite. Leaflet 1.9.4 embarqué et licence BSD conservée ; fond standard OpenStreetMap demandé seulement lors de l’affichage. IGN Géoplateforme navigation/itineraire avec profile=pedestrian, geometryFormat=geojson, mètres/secondes et EPSG:4326. Pas de compte, clé ou facturation créé.
+Position fraîche de moins de 30 s et précision <=100 m, sinon nouvelle demande GPS. Rejet des réponses invalides, routage voiture, unités inattendues ou points raccordés à plus de 100 m. Aucune ligne droite de remplacement présentée comme parcours. Délai réseau 15 s, annulation et protection des réponses tardives.
+Distance/durée restantes estimées par projection sur le parcours. Déviation signalée à plus de max(40 m, deux fois la précision GPS). Recalcul manuel uniquement. Suivi sur activation séparée ; arrêt à fermeture, arrêt général ou page masquée. Recentrage manuel sans déplacement imposé de la carte.
+## Limites et recette
+Connexion nécessaire ; pas de guidage vocal, instructions virage par virage, itinéraire intérieur, mode PMR garanti ni suivi écran verrouillé. Centre cartographique possible, entrée non vérifiée. La progression peut être ambiguë aux boucles et croisements du tracé.
+Tests unitaires : profil, unités, géométrie, raccordement, fraîcheur et progression. Recettes Chromium/WebKit automatisées avec fournisseur et GPS simulés : intégration depuis les lieux, arrêt, déviation, erreur réseau, fermeture pendant calcul et largeur 320 px. Essai IGN connecté sur coordonnées publiques de référence à Paris ; recette GPS physique Android/iPhone restant à réaliser.
+## Exploitation
+Pas de requête fournisseur avant action explicite. GPS et tracé en mémoire uniquement. Aucune requête IGN à chaque mouvement ; nouveau calcul seulement par bouton. Tuiles OSM sous cache HTTP normal, attribution visible et aucun préchargement hors ligne. Fournisseur de tuiles à réévaluer avant montée en charge ; service public sans SLA. Aucun changement de fréquence de maintenance ou de données transport.

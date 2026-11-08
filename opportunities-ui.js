@@ -19,6 +19,7 @@ function card(p){const c=core.CATEGORIES.find(c=>c.id===p.category),a=el('articl
  if(p.openingHours)detail.append(el('p','Horaires transmis par la source, à vérifier : '+p.openingHours));
  if(p.category==='events')detail.append(el('p','La période inclut aujourd’hui ; elle ne prouve pas une séance en cours ou dans les 60 minutes. Consultez les horaires de l’organisateur avant de vous déplacer.'));
  if(p.positionKind==='centroid')detail.append(el('p','Distance calculée vers le centre cartographique du lieu, pas vers une entrée vérifiée.'));
+ const walk=el('button','🚶 Y aller à pied','walk-button');walk.type='button';walk.onclick=()=>window.WenareWalkingUI?.open(p);detail.append(walk);
  const source=catalogue.manifest.sources[p.source];detail.append(link('Consulter la fiche du lieu ↗',p.url));
  const provenance=el('p',undefined,'opportunity-source');provenance.append(el('span','Source : '+source.name+(p.producer?' · '+p.producer:'')+'. '),link(source.license,source.licenseUrl),el('span',' · fiche mise à jour : '+(p.modified||'date non renseignée')+'. Collecte du catalogue : '+new Date(catalogue.manifest.collectedAt).toLocaleDateString('fr-FR')+'.'));
  detail.append(provenance);b.onclick=()=>{const id=p.category+'|'+p.id;if(expanded.has(id))expanded.delete(id);else expanded.add(id);detail.hidden=!expanded.has(id);b.setAttribute('aria-expanded',String(!detail.hidden));row1.lastChild.textContent=detail.hidden?'⌄':'⌃';};a.append(b,detail);return a;
