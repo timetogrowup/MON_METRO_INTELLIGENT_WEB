@@ -24,6 +24,7 @@ function card(p){const c=core.CATEGORIES.find(c=>c.id===p.category),a=el('articl
  detail.append(provenance);b.onclick=()=>{const id=p.category+'|'+p.id;if(expanded.has(id))expanded.delete(id);else expanded.add(id);detail.hidden=!expanded.has(id);b.setAttribute('aria-expanded',String(!detail.hidden));row1.lastChild.textContent=detail.hidden?'⌄':'⌃';};a.append(b,detail);return a;
 }
 function render(force=false){
+ window.dispatchEvent(new CustomEvent('wenare:domain',{detail:{category}}));
  const p=position(),active=category==='all'||category==='transport';$('transportOverview').hidden=!active;$('nearbyOverviewStatus').hidden=!!p&&!active;
  $('domainAll').setAttribute('aria-pressed',String(category==='all'));document.querySelectorAll('[data-domain]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.domain===category)));
  const identity=JSON.stringify([category,snapshot?.radius,snapshot?.manualRadius,snapshot?.position?.timestamp,!!catalogue,error,stopped,core.parisDay()]);if(!force&&identity===key){radiusStatus();return;}key=identity;
