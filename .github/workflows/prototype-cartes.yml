@@ -1,0 +1,39 @@
+name: Valider le prototype des cartes
+on:
+  push:
+    branches: [main]
+    paths: ['prototype-cartes/**', '.github/workflows/prototype-cartes.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  styles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Règles et syntaxe du prototype
+        run: |
+          node --check prototype-cartes/atelier.js
+          node --check prototype-cartes/fallback.js
+          node --test prototype-cartes/test-themes.cjs
+      - name: Valider les trois styles sur le fond IGN officiel
+        run: |
+          npm install --no-save --ignore-scripts @maplibre/maplibre-gl-style-spec@26.5.1
+          node - <<'JS'
+          const {validateStyleMin}=require('@maplibre/maplibre-gl-style-spec');
+          const {THEMES,style}=require('./prototype-cartes/themes.js');
+          (async()=>{
+            const response=await fetch('https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json',{signal:AbortSignal.timeout(30000)});
+            if(!response.ok)throw new Error('Style IGN indisponible');
+            const base=await response.json();
+            for(const id of Object.keys(THEMES)){
+              const errors=validateStyleMin(style(base,id,{roadWidth:1.35,labelSize:1.15,labels:false,buildings:false}));
+              if(errors.length)throw new Error(JSON.stringify(errors));
+              console.log('STYLE_IGN_OK',id,base.layers.length);
+            }
+          })().catch(error=>{console.error(error);process.exit(1);});
+          JS
