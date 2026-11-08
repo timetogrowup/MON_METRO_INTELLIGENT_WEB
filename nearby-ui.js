@@ -80,7 +80,7 @@ async function departures(mine){if(mine!==sequence||document.hidden||loading)ret
  $('nearbyOverviewAge').textContent='Position reçue à '+new Date(lastFix.timestamp).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' · précision ±'+Math.round(lastFix.coords.accuracy)+' m'+(lastFix.coords.accuracy>100?' · l’ordre des points proches peut être incertain.':'')+(Array.from(results.values()).some(r=>r.response?.clockSource==='device')?' · horaires calculés avec l’horloge de l’appareil.':'');
  clearInterval(tick);tick=setInterval(()=>{render();if(!loading&&((places.length<3&&(scanned.length<candidates.filter(p=>p.distance<=radius).length||(!manualRadius&&!places.length&&radius<3000)))||(railPlaces.length<3&&railScanned.length<candidates.filter(p=>p.distance<=radius&&p.services.some(s=>s.mode==='metro'||s.mode==='rer')).length)))departures(sequence);},1000);clearTimeout(timer);timer=setTimeout(()=>{if(enabled&&!document.hidden)start();},60000);
 }
-async function start(){window.dispatchEvent(new Event('wenare:restart'));enabled=true;$('manualOptions').open=false;cancel();if(document.hidden)return;controller=new AbortController();const mine=sequence;say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';
+async function start(){if(window.WenareEntry&&!window.WenareEntry.opened)return;window.dispatchEvent(new Event('wenare:restart'));enabled=true;$('manualOptions').open=false;cancel();if(document.hidden)return;controller=new AbortController();const mine=sequence;say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';
  const catalogue=catalogues(mine);
  if(!navigator.geolocation){fallback('Localisation indisponible sur cet appareil. La recherche manuelle reste disponible.');return;}
  let position;try{position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}));}catch(error){if(mine===sequence)fallback(error.code===1?'Autorisez la localisation pour voir vos départs automatiquement. Vous pouvez aussi rechercher un arrêt manuellement.':'Position indisponible. La recherche manuelle reste disponible.');return;}
@@ -96,6 +96,6 @@ $('eraseNetwork').addEventListener('click',()=>{enabled=false;cancel();say('Donn
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancel();say('Consultation suspendue pendant votre absence.');}else if(enabled)start();});
  window.addEventListener('pageshow',event=>{if(event.persisted&&enabled)start();});
  window.WenareOverview={refreshDomain(){if(!enabled||!lastFix||!candidates.length)return;cancel(false);loading=false;scanned=[];railScanned=[];controller=new AbortController();render();departures(sequence);}};
- start();
+ window.addEventListener('wenare:enter',start,{once:true});
+ if(!window.WenareEntry||window.WenareEntry.opened)start();
 })();
-
