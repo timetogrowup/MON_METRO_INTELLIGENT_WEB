@@ -7,10 +7,10 @@ const expanded=new Set(),views=['balanced','departure','directions'];
 try{const saved=localStorage.getItem('wenare-overview-view');if(views.includes(saved))view=saved;}catch{}
 const icon=mode=>({metro:'Ⓜ',rer:'Ⓡ',bus:'🚌'}[mode]||'🚏');
 function badge(service){const e=element('span',icon(service.mode)+' '+label(service.mode)+' '+service.lineName,'line-badge mode-'+service.mode);e.title=label(service.mode)+' '+service.lineName;return e;}
-function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' métro/RER':'');}
+function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' métro/RER':'');window.dispatchEvent(new CustomEvent('wenare:overview',{detail:{radius,manualRadius,enabled,transportCount:places.length+railPlaces.length,position:enabled?lastFix:null}}));}
 const label=mode=>({metro:'Métro',rer:'RER',bus:'Bus'}[mode]||'Transport');
 const say=text=>{$('nearbyOverviewStatus').textContent=text};
-function cancel(clear=true){sequence++;controller?.abort();controller=null;clearTimeout(timer);clearInterval(tick);timer=tick=null;if(clear){places=[];railPlaces=[];scanned=[];railScanned=[];loading=false;results.clear();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=true;}}
+function cancel(clear=true){sequence++;controller?.abort();controller=null;clearTimeout(timer);clearInterval(tick);timer=tick=null;if(clear){places=[];railPlaces=[];scanned=[];railScanned=[];loading=false;results.clear();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=true;}controls();}
 function fallback(text){enabled=false;say(text);$('manualOptions').open=true;}
 function element(tag,text,className){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;}
 function groupsFor(place,wall=Date.now(),mono=performance.now()){
@@ -65,7 +65,8 @@ async function loadQueries(queries,mine,pool){
  await Promise.allSettled(['metro','extra'].map(async mode=>{const src=sources[mode],needed=new Set(queries.filter(s=>(s.mode==='metro'?'metro':'extra')===mode&&!results.has(s.key)).map(s=>s.lineId)),q=[...new Map(pool.flatMap(p=>p.services).filter(s=>needed.has(s.lineId)&&!results.has(s.key)).map(s=>[s.key,s])).values()];if(!src||!q.length)return;try{await ensureTimetable();if(mine!==sequence)return;const rows=await WenareTimetable.loadMany(q,src.sha,controller.signal,mode==='metro'?'./distribution/timetable/':'./distribution/mobility/',true);if(mine!==sequence)return;for(const row of rows)results.set(row.query.key,{...row,clock:row.response?{server:Date.parse(row.response.serverTimeUtc),mono:performance.now(),wall:Date.now()}:null});}catch(error){if(mine!==sequence)return;for(const service of q)results.set(service.key,{error:'Horaires temporairement indisponibles.'});}}));
 }
 async function departures(mine){if(mine!==sequence||document.hidden||loading)return;loading=true;
- const radii=manualRadius?[radius]:logic.RADII;
+ const domainRadii=window.WenareOpportunitiesUI?.radii();const radii=manualRadius?[radius]:domainRadii||logic.RADII;
+ if(window.WenareOpportunitiesUI?.transportNeeded()===false){radius=radii[0];scanned=[];railScanned=[];loading=false;render();return;}
  for(const current of radii){if(mine!==sequence)return;radius=current;const pool=candidates.filter(p=>p.distance<=radius);scanned=[];
   for(let i=0;i<pool.length;i+=3){if(mine!==sequence)return;const batch=pool.slice(i,i+3);await loadQueries([...new Map(batch.flatMap(p=>p.services).map(s=>[s.key,s])).values()],mine,pool);if(mine!==sequence)return;scanned.push(...batch);render();if(places.length===3)break;}
   select();if(places.length||manualRadius)break;
@@ -77,7 +78,7 @@ async function departures(mine){if(mine!==sequence||document.hidden||loading)ret
  $('nearbyOverviewAge').textContent='Position reçue à '+new Date(lastFix.timestamp).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' · précision ±'+Math.round(lastFix.coords.accuracy)+' m'+(lastFix.coords.accuracy>100?' · l’ordre des points proches peut être incertain.':'')+(Array.from(results.values()).some(r=>r.response?.clockSource==='device')?' · horaires calculés avec l’horloge de l’appareil.':'');
  clearInterval(tick);tick=setInterval(()=>{render();if(!loading&&((places.length<3&&(scanned.length<candidates.filter(p=>p.distance<=radius).length||(!manualRadius&&!places.length&&radius<3000)))||(railPlaces.length<3&&railScanned.length<candidates.filter(p=>p.distance<=radius&&p.services.some(s=>s.mode==='metro'||s.mode==='rer')).length)))departures(sequence);},1000);clearTimeout(timer);timer=setTimeout(()=>{if(enabled&&!document.hidden)start();},60000);
 }
-async function start(){enabled=true;$('manualOptions').open=false;cancel();if(document.hidden)return;controller=new AbortController();const mine=sequence;say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';
+async function start(){window.dispatchEvent(new Event('wenare:restart'));enabled=true;$('manualOptions').open=false;cancel();if(document.hidden)return;controller=new AbortController();const mine=sequence;say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';
  const catalogue=catalogues(mine);
  if(!navigator.geolocation){fallback('Localisation indisponible sur cet appareil. La recherche manuelle reste disponible.');return;}
  let position;try{position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}));}catch(error){if(mine===sequence)fallback(error.code===1?'Autorisez la localisation pour voir vos départs automatiquement. Vous pouvez aussi rechercher un arrêt manuellement.':'Position indisponible. La recherche manuelle reste disponible.');return;}
@@ -92,6 +93,7 @@ $('manualOptions').addEventListener('toggle',()=>{if($('manualOptions').open&&en
 $('eraseNetwork').addEventListener('click',()=>{enabled=false;cancel();say('Données locales effacées. Relancez la localisation pour les recharger.');});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancel();say('Consultation suspendue pendant votre absence.');}else if(enabled)start();});
  window.addEventListener('pageshow',event=>{if(event.persisted&&enabled)start();});
+ window.WenareOverview={refreshDomain(){if(!enabled||!lastFix||!candidates.length)return;cancel(false);loading=false;scanned=[];railScanned=[];controller=new AbortController();render();departures(sequence);}};
  start();
 })();
 

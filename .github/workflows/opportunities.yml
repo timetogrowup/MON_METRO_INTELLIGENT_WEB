@@ -1,0 +1,70 @@
+name: Qualifier et actualiser les opportunités
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['opportunities*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
+  schedule:
+    - cron: '47 5 * * *'
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: opportunities-${{ github.repository }}
+  cancel-in-progress: true
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Actualiser seulement le catalogue des opportunités
+        if: github.event_name != 'push'
+        run: python scripts/build_opportunities.py
+      - name: Qualifier les sources et les règles
+        run: |
+          python -m unittest discover -s tests -p test_opportunities.py -v
+          node --test tests/test_opportunities.cjs tests/test_nearby.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer les navigateurs de recette
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium webkit
+      - name: Recettes multi-domaines et non-régression transport
+        run: |
+          python -m http.server 8765 > /tmp/wenare-domains-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for browser in chromium webkit; do
+            MMI_BROWSER=$browser node tests/test_opportunities_browser.cjs
+            MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
+          done
+      - name: Conserver la preuve
+        uses: actions/upload-artifact@v4
+        with:
+          name: opportunites-${{ github.run_id }}
+          path: distribution/opportunities/manifest.json
+      - name: Publier uniquement un catalogue qualifié
+        id: data
+        if: github.event_name != 'push' && github.repository == 'timetogrowup/MON_METRO_INTELLIGENT_WEB'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add distribution/opportunities/
+          if ! git diff --cached --quiet; then
+            git commit -m "data: actualiser les opportunités ouvertes qualifiées"
+            git pull --rebase origin main
+            node --test tests/test_opportunities.cjs
+            git push origin HEAD:main
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Demander la reconstruction GitHub Pages
+        if: steps.data.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: await github.rest.repos.requestPagesBuild({...context.repo});
