@@ -15,7 +15,7 @@ const themes=[
 ];
 const root=document.documentElement,$=id=>document.getElementById(id),gate=$('styleEntry'),reel=$('styleReel'),track=$('styleTrack'),status=$('styleEntryStatus'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let frame=0,started=performance.now(),selected=0,stopping=false,opened=false;
-window.WenareEntry={get opened(){return opened;}};
+window.WenareEntry={get opened(){return opened;},selectStyle(id){const index=themes.findIndex(t=>t[0]===id);if(index>=0)apply(index);}};
 for(let n=0;n<3;n++)for(const t of themes){const row=document.createElement('span');row.className='style-row';row.textContent=t[1];track.append(row);}
 function apply(index){const t=themes[index];root.dataset.wenareStyle=t[0];for(const [key,value] of Object.entries({accent:t[3],page:t[4],surface:t[5],ink:t[6],font:t[7],'map-filter':t[8]}))root.style.setProperty('--wenare-'+key,value);$('styleChange').textContent=t[1]+' · Changer';document.querySelector('meta[name="theme-color"]').content=t[3];window.dispatchEvent(new CustomEvent('wenare:style',{detail:{id:t[0],name:t[1]}}));}
 function paint(now){if(stopping||document.hidden)return;const position=((now-started)/65)%themes.length;selected=Math.floor(position+.5)%themes.length;track.style.transform='translateY('+(-(themes.length+position)*64)+'px)';frame=requestAnimationFrame(paint);}

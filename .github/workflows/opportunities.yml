@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
+    paths: ['map-themes*', 'vector-basemap*', 'styles-entry*', 'tests/test_vector*', 'tests/test_map_themes*', 'places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
   schedule:
     - cron: '47 5 * * *'
 permissions:
@@ -27,7 +27,7 @@ jobs:
       - name: Qualifier les sources et les règles
         run: |
           python -m unittest discover -s tests -p test_opportunities.py -v
-          node --test tests/test_opportunities.cjs tests/test_google_food.cjs tests/test_nearby.cjs tests/test_walking.cjs tests/test_places_map.cjs
+          node --test tests/test_map_themes.cjs tests/test_opportunities.cjs tests/test_google_food.cjs tests/test_nearby.cjs tests/test_walking.cjs tests/test_places_map.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -43,6 +43,7 @@ jobs:
           for browser in chromium webkit; do
             MMI_BROWSER=$browser node tests/test_opportunities_browser.cjs
             MMI_BROWSER=$browser node tests/test_places_map_browser.cjs
+            MMI_BROWSER=$browser node tests/test_vector_map_browser.cjs
             MMI_BROWSER=$browser node tests/test_walking_browser.cjs
             MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
           done
@@ -50,7 +51,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: opportunites-${{ github.run_id }}
-          path: distribution/opportunities/manifest.json
+          path: |
+            distribution/opportunities/manifest.json
+            qa-vector/
       - name: Publier uniquement un catalogue qualifié
         id: data
         if: github.event_name != 'push' && github.repository == 'timetogrowup/WENARE'
