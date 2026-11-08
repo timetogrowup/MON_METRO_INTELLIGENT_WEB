@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """Fetch and validate public IDFM rail segments; never replace valid data with failed downloads."""
-import json, urllib.request, urllib.parse, pathlib, datetime, hashlib, sys, gzip
+import json, urllib.request, urllib.parse, pathlib, datetime, hashlib, sys, gzip, time, urllib.error
 BASE="https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets"
 DATASET="traces-du-reseau-ferre-idf"
 OUT=pathlib.Path("referentiel")
 def get(url):
-    req=urllib.request.Request(url,headers={"User-Agent":"MonMetroIntelligent/1.3 (GitHub Actions)","Accept":"application/json"})
-    with urllib.request.urlopen(req,timeout=35) as r:
-        raw=r.read()
-        encoding=r.headers.get("Content-Encoding","").lower()
-        if encoding=="gzip" or raw[:2]==bytes([0x1f,0x8b]):
-            raw=gzip.decompress(raw)
-        return json.loads(raw.decode("utf-8-sig"))
+    for attempt in range(4):
+        try:
+            req=urllib.request.Request(url,headers={"User-Agent":"MonMetroIntelligent/1.3 (GitHub Actions)","Accept":"application/json"})
+            with urllib.request.urlopen(req,timeout=35) as r:
+                raw=r.read()
+                encoding=r.headers.get("Content-Encoding","").lower()
+                if encoding=="gzip" or raw[:2]==bytes([0x1f,0x8b]):
+                    raw=gzip.decompress(raw)
+                return json.loads(raw.decode("utf-8-sig"))
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if isinstance(exc,urllib.error.HTTPError) and exc.code not in (429,500,502,503,504):
+                raise
+            if attempt==3:
+                raise
+            delay=2**(attempt+1)
+            print(f"Source temporarily unavailable; retry {attempt+1}/3 in {delay}s",file=sys.stderr)
+            time.sleep(delay)
 def main():
     meta=get(f"{BASE}/{DATASET}")
     print("Dataset metadata:",json.dumps({"dataset_id":meta.get("dataset_id"),"fields":[x.get("name") for x in meta.get("fields",[])]},ensure_ascii=False))
@@ -19,7 +29,7 @@ def main():
     geom=next((x for x in ("geo_shape","geoshape","geometry") if x in fields),None)
     if not geom:raise ValueError("No recognized geometry field; inspect dataset schema")
     # A single export avoids unstable page boundaries in the live source.
-    total=get(f"{BASE}/{DATASET}/records?limit=0")["total_count"]
+    total=get(f"{BASE}/{DATASET}/records?limit=1")["total_count"]
     records=get(f"{BASE}/{DATASET}/exports/json")
     if not isinstance(records,list) or not records or len(records)!=total:
         raise ValueError(f"Incomplete snapshot {len(records) if isinstance(records,list) else 'invalid'}/{total}")
@@ -54,4 +64,3 @@ def main():
 if __name__=="__main__":
     try:main()
     except Exception as e:print(f"FAILED: {type(e).__name__}: {e}",file=sys.stderr);sys.exit(1)
-
