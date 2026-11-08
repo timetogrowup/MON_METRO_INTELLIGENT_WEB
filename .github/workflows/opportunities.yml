@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['map-themes*', 'vector-basemap*', 'styles-entry*', 'tests/test_vector*', 'tests/test_map_themes*', 'places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
+    paths: ['theme-*', 'tests/test_theme*', 'map-themes*', 'vector-basemap*', 'styles-entry*', 'tests/test_vector*', 'tests/test_map_themes*', 'places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
   schedule:
     - cron: '47 5 * * *'
 permissions:
@@ -44,6 +44,7 @@ jobs:
             MMI_BROWSER=$browser node tests/test_opportunities_browser.cjs
             MMI_BROWSER=$browser node tests/test_places_map_browser.cjs
             MMI_BROWSER=$browser node tests/test_vector_map_browser.cjs
+            MMI_BROWSER=$browser node tests/test_theme_system_browser.cjs
             MMI_BROWSER=$browser node tests/test_walking_browser.cjs
             MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
           done
@@ -54,6 +55,7 @@ jobs:
           path: |
             distribution/opportunities/manifest.json
             qa-vector/
+            qa-themes/
       - name: Publier uniquement un catalogue qualifié
         id: data
         if: github.event_name != 'push' && github.repository == 'timetogrowup/WENARE'
