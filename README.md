@@ -19,3 +19,6 @@ Les trois vues et les détails affichent uniquement les départs futurs à 60 mi
 
 ## Cartes compactes et complément métro/RER — 8 novembre 2026
 Les cartes conservent trois lignes, avec des espacements réduits. Une section complémentaire Métro/RER présente jusqu'à trois points supplémentaires dans le rayon sélectionné, avec les mêmes règles de 60 minutes et de dédoublonnage. Les points et lignes déjà présents dans la liste principale ne sont pas répétés. La section disparaît lorsqu'elle est vide ; choix de présentation, détail et clavier sont conservés. Qualification complète : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42470643589 . Cache applicatif v16.
+
+## Prochain départ par sens et suivant — 8 novembre 2026
+Chaque ligne de transport présente ses deux sens disponibles côte à côte, nommés par leur premier arrêt desservi. Format 7′ (17′) : prochain départ dans 7 minutes, suivant dans 17 minutes. Aucun second sens ni horaire absent n'est inventé. Fenêtre de 60 minutes, rayon, points sans doublons, section métro/RER et détails exhaustifs conservés. Deux lignes distinctes dans la synthèse ; autres lignes/variantes signalées et accessibles au dépliage. Qualification complète : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42471966098 . Cache v17.

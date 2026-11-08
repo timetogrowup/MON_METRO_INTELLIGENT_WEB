@@ -24,26 +24,23 @@ function render(){
  const card=element('article',undefined,'departure-place');card.dataset.view=view;
  const groups=place.groups,lineStates=new Map(place.services.map(service=>[service.lineId,{service}])),partial=dataIssues,list=element('ul',undefined,'all-departures'),shown=new Set();
  for(const group of groups){shown.add(group.lineId);const li=element('li'),name=element('div',undefined,'departure-service');li.dataset.lineId=group.lineId;name.append(badge(group),element('span','→ '+group.nextName));li.append(name);const times=element('p',undefined,'departure-times');group.events.forEach((item,j)=>times.append(element('span',(j?'Puis ':'')+item.view.label.toLocaleLowerCase('fr')+' · '+new Date(item.view.time).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}))));if(group.events.length===1)times.append(element('span','Puis : aucun dans les 60 min'));li.append(times);list.append(li);}
- const ordered=[...groups].sort((a,b)=>a.events[0].view.time-b.events[0].view.time),first=ordered[0],second=ordered[1];
+ const lines=logic.lineRows(groups).sort(view==='departure'?(a,b)=>a.nextTime-b.nextTime:view==='balanced'?(a,b)=>['metro','rer','bus'].indexOf(a.mode)-['metro','rer','bus'].indexOf(b.mode)||a.lineName.localeCompare(b.lineName,'fr',{numeric:true}):(a,b)=>a.lineName.localeCompare(b.lineName,'fr',{numeric:true}));
  const summary=element('button',undefined,'place-summary'),detailId=prefix+'-detail-'+i,open=expanded.has(place.id);
  summary.type='button';summary.dataset.placeId=place.id;summary.setAttribute('aria-expanded',String(open));summary.setAttribute('aria-controls',detailId);
  const row1=element('span',undefined,'summary-row place-heading'),title=element('h2',place.name,'place-name');title.title=place.name;
  row1.append(element('span','📍','place-pin'),title,element('span',Math.ceil(place.distance)+' m','place-distance'),element('span',open?'⌃':'⌄','place-chevron'));
  const row2=element('span',undefined,'summary-row'),row3=element('span',undefined,'summary-row');
- const walk='🚶 ≈ '+core.walkingMinutes(place.distance)+' min',time=item=>item.view.label.toLocaleLowerCase('fr').replace(/^dans /,''),remaining=Math.max(0,ordered.length-(view==='directions'?2:1));
- const groupRow=(row,g,large=false)=>{row.append(badge(g),element('span','→ '+g.nextName,'summary-destination'));row.append(element('span',time(g.events[0]),large?'summary-time large-time':'summary-time'));};
- const more=()=>element('span',remaining?'＋'+remaining+' autres':(partial?'⚠ Partiel':'⌄ Détails'),'summary-more');
- if(view==='balanced'){
-   row2.append(element('span',walk,'summary-walk'));const lines=[...lineStates.values()].map(x=>x.service).sort((a,b)=>['metro','rer','bus'].indexOf(a.mode)-['metro','rer','bus'].indexOf(b.mode));lines.slice(0,2).forEach(service=>row2.append(badge(service)));if(lines.length>2)row2.append(element('span','＋'+(lines.length-2),'summary-more'));
-   if(first){row3.append(badge(first),element('span','→ '+first.nextName,'summary-destination'),element('span',time(first.events[0]),'summary-time'),element('span',first.events[1]?'puis '+time(first.events[1]):'Puis : —','summary-following'));}else row3.append(element('span',[...lineStates.values()][0]?.text||'Horaires indisponibles','summary-destination'));
- }else if(view==='departure'){
-   if(first)groupRow(row2,first,true);else row2.append(element('span',[...lineStates.values()][0]?.text||'Horaires indisponibles','summary-destination'));
-   row3.append(element('span',walk,'summary-walk'),element('span',first?.events[1]?'Puis '+time(first.events[1]):'Puis : —','summary-following'),more());
- }else{
-   if(first)groupRow(row2,first);else row2.append(element('span',[...lineStates.values()][0]?.text||'Horaires indisponibles','summary-destination'));
-   if(second)groupRow(row3,second);else row3.append(element('span',walk,'summary-walk'),element('span',first?.events[1]?'Puis '+time(first.events[1]):'Puis : —','summary-following'));
-   row3.append(more());
+ const walk='🚶 ≈ '+core.walkingMinutes(place.distance)+' min';
+ const visible=lines.slice(0,2),hiddenLines=lines.length-visible.length;
+ if(hiddenLines){const extra=element('span','＋'+hiddenLines,'summary-extra');extra.title=hiddenLines+' autres lignes dans le détail';row1.insertBefore(extra,row1.lastChild);}
+ function renderLine(row,line){row.classList.add('line-senses-row');row.dataset.lineId=line.lineId;const logo=element('span',(line.mode==='bus'?'':icon(line.mode)+' ')+line.lineName,'line-badge compact-line mode-'+line.mode);logo.title=label(line.mode)+' '+line.lineName;logo.setAttribute('aria-label',logo.title);row.append(logo);
+  line.directions.slice(0,2).forEach((direction,index)=>{const cell=element('span',undefined,'sense-cell');cell.dataset.nextPlaceId=direction.nextPlaceId;const name=element('span',(index?'':'← ')+direction.nextName+(index?' →':''),'sense-name');name.title=direction.nextName;
+   const time=element('span',undefined,'sense-time'),next=logic.compactWait(direction.events[0].view);time.append(element('strong',next,'sense-next'));if(direction.events[1])time.append(element('small',' ('+logic.compactWait(direction.events[1].view)+')','sense-following'));
+   cell.setAttribute('aria-label',label(line.mode)+' '+line.lineName+' vers '+direction.nextName+' : '+direction.events[0].view.label+(direction.events[1]?', puis '+direction.events[1].view.label:''));cell.append(name,time);row.append(cell);});
+  if(line.directions.length===1){const absent=element('span','—','sense-cell sense-empty');absent.setAttribute('aria-label','Pas de second sens avec un départ dans les 60 minutes');row.append(absent);}
+  if(line.directions.length>2){const more=element('span','＋'+(line.directions.length-2),'sense-variants');more.title='Autres premiers arrêts dans le détail';row.append(more);}
  }
+ if(visible[0])renderLine(row2,visible[0]);if(visible[1])renderLine(row3,visible[1]);else row3.append(element('span',walk,'summary-walk'),element('span',partial?'⚠ Partiel · ⌄ Détails':'⌄ Détails','summary-more'));
 
  summary.append(row1,row2,row3);const detail=element('div',undefined,'place-detail');detail.id=detailId;detail.hidden=!open;
  detail.append(element('p',Math.ceil(place.distance)+' m à vol d’oiseau · '+walk+' de marche indicative','muted'),list,element('small',(partial?'⚠ Certains horaires sont indisponibles · ':'')+'Horaires théoriques · 60 prochaines minutes · lignes au point utile le plus proche · perturbations non connues'));
@@ -60,7 +57,7 @@ async function catalogues(mine){
  $('nearbyCoverage').textContent=(sources.extra?.record?.manifest.catalogueVersion===3?'Couverture : métro (16 lignes), RER A–E et '+sources.extra.record.manifest.qa.busLines+' lignes de bus au catalogue Île-de-France. Arrêts disposant de départs théoriques sur la période.':'Couverture : métro (16 lignes), RER A–E et cinq lignes de bus pilotes. Classement parmi les points couverts.')+(outputs.some(r=>r.status==='rejected')?' Certaines données sont indisponibles : propositions partielles.':'');return logic.mergePlaces(data);
 }
 let timetableReady=null;
-function ensureTimetable(){if(window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function')return Promise.resolve();if(!timetableReady)timetableReady=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./timetable.js?v=16';script.onload=()=>window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function'?resolve():reject(new Error('CLIENT_UPDATE_REQUIRED'));script.onerror=()=>reject(new Error('CLIENT_UPDATE_REQUIRED'));document.head.append(script);}).catch(error=>{timetableReady=null;throw error;});return timetableReady;}
+function ensureTimetable(){if(window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function')return Promise.resolve();if(!timetableReady)timetableReady=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./timetable.js?v=17';script.onload=()=>window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function'?resolve():reject(new Error('CLIENT_UPDATE_REQUIRED'));script.onerror=()=>reject(new Error('CLIENT_UPDATE_REQUIRED'));document.head.append(script);}).catch(error=>{timetableReady=null;throw error;});return timetableReady;}
 async function loadQueries(queries,mine,pool){
  await Promise.allSettled(['metro','extra'].map(async mode=>{const src=sources[mode],needed=new Set(queries.filter(s=>(s.mode==='metro'?'metro':'extra')===mode&&!results.has(s.key)).map(s=>s.lineId)),q=[...new Map(pool.flatMap(p=>p.services).filter(s=>needed.has(s.lineId)&&!results.has(s.key)).map(s=>[s.key,s])).values()];if(!src||!q.length)return;try{await ensureTimetable();if(mine!==sequence)return;const rows=await WenareTimetable.loadMany(q,src.sha,controller.signal,mode==='metro'?'./distribution/timetable/':'./distribution/mobility/',true);if(mine!==sequence)return;for(const row of rows)results.set(row.query.key,{...row,clock:row.response?{server:Date.parse(row.response.serverTimeUtc),mono:performance.now(),wall:Date.now()}:null});}catch(error){if(mine!==sequence)return;for(const service of q)results.set(service.key,{error:'Horaires temporairement indisponibles.'});}}));
 }
