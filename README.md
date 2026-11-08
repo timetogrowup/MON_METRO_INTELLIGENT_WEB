@@ -16,3 +16,6 @@ Aucun temps réel ni reconnaissance embarquée bus/RER n’est annoncé. Le suiv
 
 ## Départs utiles — 8 novembre 2026
 Les trois vues et les détails affichent uniquement les départs futurs à 60 minutes incluses. Chaque ligne officielle est conservée au point le plus proche ayant un départ dans cette fenêtre, avec tous ses sens admissibles. Les lieux vides sont remplacés par les suivants dans le rayon, jusqu'à trois points. Le rayon automatique cherche un point utile. Qualification source complète : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42469430763 . Cache applicatif v15 ; horaires théoriques.
+
+## Cartes compactes et complément métro/RER — 8 novembre 2026
+Les cartes conservent trois lignes, avec des espacements réduits. Une section complémentaire Métro/RER présente jusqu'à trois points supplémentaires dans le rayon sélectionné, avec les mêmes règles de 60 minutes et de dédoublonnage. Les points et lignes déjà présents dans la liste principale ne sont pas répétés. La section disparaît lorsqu'elle est vide ; choix de présentation, détail et clavier sont conservés. Qualification complète : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42470643589 . Cache applicatif v16.

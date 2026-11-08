@@ -1,31 +1,31 @@
 (function(){'use strict';
 const $=id=>document.getElementById(id),core=WenareDepartures,logic=WenareNearby;
 let sequence=0,controller=null,timer=null,tick=null,enabled=true,places=[],sources={},lastFix=null,results=new Map(),stopIndex=new Map();
-let scanned=[],loading=false,dataIssues=false;
+let scanned=[],railScanned=[],railPlaces=[],loading=false,dataIssues=false;
 let candidates=[],radius=250,manualRadius=false,view='balanced';
 const expanded=new Set(),views=['balanced','departure','directions'];
 try{const saved=localStorage.getItem('wenare-overview-view');if(views.includes(saved))view=saved;}catch{}
 const icon=mode=>({metro:'Ⓜ',rer:'Ⓡ',bus:'🚌'}[mode]||'🚏');
 function badge(service){const e=element('span',icon(service.mode)+' '+label(service.mode)+' '+service.lineName,'line-badge mode-'+service.mode);e.title=label(service.mode)+' '+service.lineName;return e;}
-function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s');}
+function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' métro/RER':'');}
 const label=mode=>({metro:'Métro',rer:'RER',bus:'Bus'}[mode]||'Transport');
 const say=text=>{$('nearbyOverviewStatus').textContent=text};
-function cancel(clear=true){sequence++;controller?.abort();controller=null;clearTimeout(timer);clearInterval(tick);timer=tick=null;if(clear){places=[];scanned=[];loading=false;results.clear();$('nearbyCards').replaceChildren();}}
+function cancel(clear=true){sequence++;controller?.abort();controller=null;clearTimeout(timer);clearInterval(tick);timer=tick=null;if(clear){places=[];railPlaces=[];scanned=[];railScanned=[];loading=false;results.clear();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=true;}}
 function fallback(text){enabled=false;say(text);$('manualOptions').open=true;}
 function element(tag,text,className){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;}
 function groupsFor(place,wall=Date.now(),mono=performance.now()){
  const observations=[];for(const service of place.services){const row=results.get(service.key);if(!row)continue;if(row.error){dataIssues=true;continue;}const now=row.clock.server+mono-row.clock.mono;if(Math.abs((wall-row.clock.wall)-(mono-row.clock.mono))>30000||now>=Date.parse(row.response.validUntilUtc)){dataIssues=true;continue;}for(const event of row.response.departures){const view=core.presentation(event,now);if(logic.imminent(view,now))observations.push({service,event,view});}}
  return logic.departureGroups(observations,stopIndex);
 }
-function select(){dataIssues=false;const wall=Date.now(),mono=performance.now(),groups=new Map(scanned.map(p=>[p.id,groupsFor(p,wall,mono)]));places=logic.selectUsefulPlaces(scanned,groups);}
+function select(){dataIssues=false;const wall=Date.now(),mono=performance.now(),all=[...new Map([...railScanned,...scanned].map(p=>[p.id,p])).values()],groups=new Map(all.map(p=>[p.id,groupsFor(p,wall,mono)])),sections=logic.selectSections(scanned,groups,railScanned);places=sections.primary;railPlaces=sections.rail;}
 function render(){
- select();const focusedPlace=document.activeElement?.classList.contains('place-summary')?document.activeElement.dataset.placeId:null;controls();$('nearbyCards').replaceChildren();if(!places.length&&lastFix&&enabled)$('nearbyCards').append(element('p',loading?'⏳ Recherche des départs dans les 60 minutes…':dataIssues?'⚠ Horaires indisponibles ou expirés. Réessayez avec une connexion.':'🔎 Aucun départ dans les 60 minutes à moins de '+radius.toLocaleString('fr-FR')+' m.','nearby-empty'));const nowWall=Date.now(),nowMono=performance.now();
- for(const [i,place] of places.entries()){
+ select();const focusedPlace=document.activeElement?.classList.contains('place-summary')?document.activeElement.dataset.placeId:null;controls();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=!railPlaces.length;if(!places.length&&lastFix&&enabled)$('nearbyCards').append(element('p',loading?'⏳ Recherche des départs dans les 60 minutes…':dataIssues?'⚠ Horaires indisponibles ou expirés. Réessayez avec une connexion.':'🔎 Aucun départ dans les 60 minutes à moins de '+radius.toLocaleString('fr-FR')+' m.','nearby-empty'));const nowWall=Date.now(),nowMono=performance.now();
+ for(const {i,place,target,prefix} of [...places.map((place,i)=>({place,i,target:'nearbyCards',prefix:'place'})),...railPlaces.map((place,i)=>({place,i,target:'railCards',prefix:'rail'}))]){
  const card=element('article',undefined,'departure-place');card.dataset.view=view;
  const groups=place.groups,lineStates=new Map(place.services.map(service=>[service.lineId,{service}])),partial=dataIssues,list=element('ul',undefined,'all-departures'),shown=new Set();
  for(const group of groups){shown.add(group.lineId);const li=element('li'),name=element('div',undefined,'departure-service');li.dataset.lineId=group.lineId;name.append(badge(group),element('span','→ '+group.nextName));li.append(name);const times=element('p',undefined,'departure-times');group.events.forEach((item,j)=>times.append(element('span',(j?'Puis ':'')+item.view.label.toLocaleLowerCase('fr')+' · '+new Date(item.view.time).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}))));if(group.events.length===1)times.append(element('span','Puis : aucun dans les 60 min'));li.append(times);list.append(li);}
  const ordered=[...groups].sort((a,b)=>a.events[0].view.time-b.events[0].view.time),first=ordered[0],second=ordered[1];
- const summary=element('button',undefined,'place-summary'),detailId='place-detail-'+i,open=expanded.has(place.id);
+ const summary=element('button',undefined,'place-summary'),detailId=prefix+'-detail-'+i,open=expanded.has(place.id);
  summary.type='button';summary.dataset.placeId=place.id;summary.setAttribute('aria-expanded',String(open));summary.setAttribute('aria-controls',detailId);
  const row1=element('span',undefined,'summary-row place-heading'),title=element('h2',place.name,'place-name');title.title=place.name;
  row1.append(element('span','📍','place-pin'),title,element('span',Math.ceil(place.distance)+' m','place-distance'),element('span',open?'⌃':'⌄','place-chevron'));
@@ -48,7 +48,7 @@ function render(){
  summary.append(row1,row2,row3);const detail=element('div',undefined,'place-detail');detail.id=detailId;detail.hidden=!open;
  detail.append(element('p',Math.ceil(place.distance)+' m à vol d’oiseau · '+walk+' de marche indicative','muted'),list,element('small',(partial?'⚠ Certains horaires sont indisponibles · ':'')+'Horaires théoriques · 60 prochaines minutes · lignes au point utile le plus proche · perturbations non connues'));
  summary.onclick=()=>{if(expanded.has(place.id))expanded.delete(place.id);else expanded.add(place.id);render();};
- card.append(summary,detail);$('nearbyCards').append(card);
+ card.append(summary,detail);$(target).append(card);
  }
  if(focusedPlace)Array.from(document.querySelectorAll('.place-summary')).find(b=>b.dataset.placeId===focusedPlace)?.focus({preventScroll:true});
 }
@@ -60,7 +60,7 @@ async function catalogues(mine){
  $('nearbyCoverage').textContent=(sources.extra?.record?.manifest.catalogueVersion===3?'Couverture : métro (16 lignes), RER A–E et '+sources.extra.record.manifest.qa.busLines+' lignes de bus au catalogue Île-de-France. Arrêts disposant de départs théoriques sur la période.':'Couverture : métro (16 lignes), RER A–E et cinq lignes de bus pilotes. Classement parmi les points couverts.')+(outputs.some(r=>r.status==='rejected')?' Certaines données sont indisponibles : propositions partielles.':'');return logic.mergePlaces(data);
 }
 let timetableReady=null;
-function ensureTimetable(){if(window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function')return Promise.resolve();if(!timetableReady)timetableReady=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./timetable.js?v=15';script.onload=()=>window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function'?resolve():reject(new Error('CLIENT_UPDATE_REQUIRED'));script.onerror=()=>reject(new Error('CLIENT_UPDATE_REQUIRED'));document.head.append(script);}).catch(error=>{timetableReady=null;throw error;});return timetableReady;}
+function ensureTimetable(){if(window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function')return Promise.resolve();if(!timetableReady)timetableReady=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./timetable.js?v=16';script.onload=()=>window.WenareTimetable?.bundleVersion==='2026-11-03.12'&&typeof window.WenareTimetable.loadMany==='function'?resolve():reject(new Error('CLIENT_UPDATE_REQUIRED'));script.onerror=()=>reject(new Error('CLIENT_UPDATE_REQUIRED'));document.head.append(script);}).catch(error=>{timetableReady=null;throw error;});return timetableReady;}
 async function loadQueries(queries,mine,pool){
  await Promise.allSettled(['metro','extra'].map(async mode=>{const src=sources[mode],needed=new Set(queries.filter(s=>(s.mode==='metro'?'metro':'extra')===mode&&!results.has(s.key)).map(s=>s.lineId)),q=[...new Map(pool.flatMap(p=>p.services).filter(s=>needed.has(s.lineId)&&!results.has(s.key)).map(s=>[s.key,s])).values()];if(!src||!q.length)return;try{await ensureTimetable();if(mine!==sequence)return;const rows=await WenareTimetable.loadMany(q,src.sha,controller.signal,mode==='metro'?'./distribution/timetable/':'./distribution/mobility/',true);if(mine!==sequence)return;for(const row of rows)results.set(row.query.key,{...row,clock:row.response?{server:Date.parse(row.response.serverTimeUtc),mono:performance.now(),wall:Date.now()}:null});}catch(error){if(mine!==sequence)return;for(const service of q)results.set(service.key,{error:'Horaires temporairement indisponibles.'});}}));
 }
@@ -70,9 +70,12 @@ async function departures(mine){if(mine!==sequence||document.hidden||loading)ret
   for(let i=0;i<pool.length;i+=3){if(mine!==sequence)return;const batch=pool.slice(i,i+3);await loadQueries([...new Map(batch.flatMap(p=>p.services).map(s=>[s.key,s])).values()],mine,pool);if(mine!==sequence)return;scanned.push(...batch);render();if(places.length===3)break;}
   select();if(places.length||manualRadius)break;
  }
+ if(mine!==sequence||document.hidden)return;
+ const railPool=candidates.filter(p=>p.distance<=radius&&p.services.some(s=>s.mode==='metro'||s.mode==='rer')).map(p=>({...p,services:p.services.filter(s=>s.mode==='metro'||s.mode==='rer')}));railScanned=[];
+ for(let i=0;i<railPool.length;i+=3){if(mine!==sequence)return;const batch=railPool.slice(i,i+3);await loadQueries([...new Map(batch.flatMap(p=>p.services).map(s=>[s.key,s])).values()],mine,railPool);if(mine!==sequence)return;railScanned.push(...batch);render();if(railPlaces.length===3)break;}
  if(mine!==sequence||document.hidden)return;loading=false;render();say(dataIssues?'⚠ Certains horaires sont indisponibles ou expirés. Départs vérifiés uniquement.':places.length?'🕒 60 prochaines minutes · les sens de départ sont regroupés.':'🔎 Aucun départ dans les 60 minutes dans ce rayon.');
  $('nearbyOverviewAge').textContent='Position reçue à '+new Date(lastFix.timestamp).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' · précision ±'+Math.round(lastFix.coords.accuracy)+' m'+(lastFix.coords.accuracy>100?' · l’ordre des points proches peut être incertain.':'')+(Array.from(results.values()).some(r=>r.response?.clockSource==='device')?' · horaires calculés avec l’horloge de l’appareil.':'');
- clearInterval(tick);tick=setInterval(()=>{render();if(!loading&&places.length<3&&(scanned.length<candidates.filter(p=>p.distance<=radius).length||(!manualRadius&&!places.length&&radius<3000)))departures(sequence);},1000);clearTimeout(timer);timer=setTimeout(()=>{if(enabled&&!document.hidden)start();},60000);
+ clearInterval(tick);tick=setInterval(()=>{render();if(!loading&&((places.length<3&&(scanned.length<candidates.filter(p=>p.distance<=radius).length||(!manualRadius&&!places.length&&radius<3000)))||(railPlaces.length<3&&railScanned.length<candidates.filter(p=>p.distance<=radius&&p.services.some(s=>s.mode==='metro'||s.mode==='rer')).length)))departures(sequence);},1000);clearTimeout(timer);timer=setTimeout(()=>{if(enabled&&!document.hidden)start();},60000);
 }
 async function start(){enabled=true;$('manualOptions').open=false;cancel();if(document.hidden)return;controller=new AbortController();const mine=sequence;say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';
  const catalogue=catalogues(mine);
