@@ -7,5 +7,7 @@ function departureGroups(observations,stops){const groups=new Map();for(const {s
 const RADII=Object.freeze([250,500,1000,3000]);
 function automaticRadius(candidates){return RADII.find(r=>candidates.some(p=>Number.isFinite(p.distance)&&p.distance<=r))||3000;}
 function withinRadius(candidates,radius){if(!RADII.includes(radius))return [];return candidates.filter(p=>Number.isFinite(p.distance)&&p.distance>=0&&p.distance<=radius).sort((a,b)=>a.distance-b.distance).slice(0,3);}
-return {mergePlaces,validPosition,activeEvents,departureGroups,RADII,automaticRadius,withinRadius};
+function imminent(view,now){return !!view?.active&&Number.isFinite(view.time)&&Number.isFinite(now)&&view.time>now&&view.time-now<=3600000;}
+function selectUsefulPlaces(candidates,groupsByPlace,max=3){const claimed=new Set(),selected=[];for(const place of [...candidates].sort((a,b)=>a.distance-b.distance)){const groups=(groupsByPlace.get(place.id)||[]).filter(g=>g.events.length&&!claimed.has(g.lineId));if(!groups.length)continue;const lines=new Set(groups.map(g=>g.lineId));for(const line of lines)claimed.add(line);selected.push({...place,groups,services:place.services.filter(s=>lines.has(s.lineId))});if(selected.length>=max)break;}return selected;}
+return {mergePlaces,validPosition,activeEvents,departureGroups,RADII,automaticRadius,withinRadius,imminent,selectUsefulPlaces};
 });

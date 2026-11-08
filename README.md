@@ -13,3 +13,6 @@ Aucun temps réel ni reconnaissance embarquée bus/RER n’est annoncé. Le suiv
 - Trois présentations : Équilibré, Départ et Directions. Choix mémorisé sur l'appareil ; cartes sur trois lignes et détail dépliable.
 - Changer de présentation ne relance ni GPS ni horaires. Distances directes, marche indicative, horaires théoriques et fraîcheur contrôlée.
 - Qualification source complète réussie : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42468265548 . Aucun essai GPS physique revendiqué pour cet incrément.
+
+## Départs utiles — 8 novembre 2026
+Les trois vues et les détails affichent uniquement les départs futurs à 60 minutes incluses. Chaque ligne officielle est conservée au point le plus proche ayant un départ dans cette fenêtre, avec tous ses sens admissibles. Les lieux vides sont remplacés par les suivants dans le rayon, jusqu'à trois points. Le rayon automatique cherche un point utile. Qualification source complète : https://github.com/timetogrowup/MON_METRO_INTELLIGENT/actions/runs/42469430763 . Cache applicatif v15 ; horaires théoriques.
