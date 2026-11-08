@@ -51,6 +51,7 @@ function render(){
  summary.onclick=()=>{if(expanded.has(place.id))expanded.delete(place.id);else expanded.add(place.id);render();};
  card.append(summary,detail);$(target).append(card);
  }
+ window.dispatchEvent(new CustomEvent('wenare:map-data',{detail:{source:'transport',items:enabled?[...places,...railPlaces].map(p=>({...p,id:String(p.id),category:'transport',mapSummary:p.groups.map(g=>label(g.mode)+' '+g.lineName+' → '+g.nextName+' : '+g.events.map(x=>x.view.label).join(', puis ')).join(' · ')})):[]}}));
  if(focusedPlace)Array.from(document.querySelectorAll('.place-summary')).find(b=>b.dataset.placeId===focusedPlace)?.focus({preventScroll:true});
 }
 async function catalogues(mine){

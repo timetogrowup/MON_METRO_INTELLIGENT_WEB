@@ -24,12 +24,13 @@ function card(p){const c=core.CATEGORIES.find(c=>c.id===p.category),a=el('articl
  const provenance=el('p',undefined,'opportunity-source');provenance.append(el('span','Source : '+source.name+(p.producer?' · '+p.producer:'')+'. '),link(source.license,source.licenseUrl),el('span',' · fiche mise à jour : '+(p.modified||'date non renseignée')+'. Collecte du catalogue : '+new Date(catalogue.manifest.collectedAt).toLocaleDateString('fr-FR')+'.'));
  detail.append(provenance);b.onclick=()=>{const id=p.category+'|'+p.id;if(expanded.has(id))expanded.delete(id);else expanded.add(id);detail.hidden=!expanded.has(id);b.setAttribute('aria-expanded',String(!detail.hidden));row1.lastChild.textContent=detail.hidden?'⌄':'⌃';};a.append(b,detail);return a;
 }
+function publishMap(){const p=position(),selected=core.CATEGORIES.filter(c=>c.id!=='transport'&&(category==='all'||category===c.id));const items=catalogue&&p&&!stopped?selected.flatMap(c=>core.select(catalogue.items[c.id]||[],p,snapshot.radius)):[];window.dispatchEvent(new CustomEvent('wenare:map-data',{detail:{source:'opportunities',items}}));}
 function render(force=false){
  window.dispatchEvent(new CustomEvent('wenare:domain',{detail:{category}}));
  const p=position(),active=category==='all'||category==='transport';$('transportOverview').hidden=!active;$('nearbyOverviewStatus').hidden=!!p&&!active;
  $('domainAll').setAttribute('aria-pressed',String(category==='all'));document.querySelectorAll('[data-domain]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.domain===category)));
  const identity=JSON.stringify([category,snapshot?.radius,snapshot?.manualRadius,snapshot?.position?.timestamp,!!catalogue,error,stopped,core.parisDay()]);if(!force&&identity===key){radiusStatus();return;}key=identity;
- $('opportunityOverview').replaceChildren();if(category==='transport'){radiusStatus();return;}
+ $('opportunityOverview').replaceChildren();publishMap();if(category==='transport'){resultCount=0;radiusStatus();return;}
  const selected=core.CATEGORIES.filter(c=>c.id!=='transport'&&(category==='all'||category===c.id));let total=0;
  for(const c of selected){const section=el('section',undefined,'opportunity-section'),h=el('h3',c.icon+' '+c.title,'opportunity-title'),rows=catalogue&&p?core.select(catalogue.items[c.id]||[],p,snapshot.radius):[];
  h.append(el('span',rows.length?' '+rows.length+' lieu'+(rows.length>1?'x':''):'' ,'opportunity-count'));section.append(h);
@@ -41,7 +42,7 @@ function render(force=false){
  resultCount=total;radiusStatus();$('domainResultsStatus').textContent=p&&!stopped?(category==='all'?total+' autres lieux proposés':total+' lieu'+(total>1?'x':'')+' proposé'+(total>1?'s':'')):'Position nécessaire pour les autres domaines.';
 }
 async function load(){controller?.abort();controller=new AbortController();const mine=++request;try{const next=await core.load(controller.signal);if(mine!==request||stopped)return;catalogue=next;error=null;render(true);if(snapshot?.position)window.WenareOverview?.refreshDomain();}catch(e){if(mine!==request||e.name==='AbortError')return;error='Catalogue indisponible ou expiré. Réessayez avec une connexion.';render(true);}finally{if(mine===request)controller=null;}}
-for(const c of core.CATEGORIES){const b=el('button',undefined,'domain-button');b.type='button';b.dataset.domain=c.id;b.setAttribute('aria-pressed','false');const icon=el('span',c.icon,'domain-icon');icon.setAttribute('aria-hidden','true');b.append(icon,el('span',c.short));b.onclick=()=>{category=c.id;render(true);window.WenareOverview?.refreshDomain();};$('domainChoices').append(b);}
+for(const c of core.CATEGORIES){const b=el('button',undefined,'domain-button');b.type='button';b.dataset.domain=c.id;b.style.setProperty('--domain-color',WenarePlacesMap.COLORS[c.id]);b.setAttribute('aria-pressed','false');const icon=el('span',c.icon,'domain-icon');icon.setAttribute('aria-hidden','true');const dot=el('span',undefined,'domain-color-dot');dot.setAttribute('aria-hidden','true');b.append(icon,el('span',c.short),dot);b.onclick=()=>{category=c.id;render(true);window.WenareOverview?.refreshDomain();};$('domainChoices').append(b);}
 document.querySelector('#domainAll').onclick=()=>{category='all';render(true);window.WenareOverview?.refreshDomain();};
 window.addEventListener('wenare:overview',e=>{snapshot=e.detail;const was=stopped;stopped=!snapshot.enabled;if(stopped){request++;controller?.abort();}else if(was&&!catalogue)load();render();});
 window.WenareOpportunitiesUI={radii,transportNeeded:()=>category==='all'||category==='transport'};

@@ -28,3 +28,6 @@ Préparation des générateurs et du client de livraison pour conserver le véri
 
 ## Identité et accueil — 8 novembre 2026
 Adresse publique : https://timetogrowup.github.io/WENARE/ . Six distances sur une ligne, bloc Couverture et texte introductif masqués. Erreurs GPS toujours visibles. Rayons étendus manuels ; recherche automatique initiale jusqu’à 3 000 m. Qualification locale : 22 tests Node réussis.
+
+## Carte des lieux — 8 novembre 2026
+Accès Carte sous les rayons, dix catégories colorées, mêmes lieux et filtres que la liste, groupes consultables, fiches et accès au guidage à pied. Rotation tactile, nord et recentrage. Détails et validation : [CARTE_LIEUX.md](CARTE_LIEUX.md). Cache interface v26.
