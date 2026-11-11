@@ -67,11 +67,14 @@ def build(z,network,day):
         if r['trip_id'] in trips and r['trip_id'] not in frequencies:
             rows[r['trip_id']].append((int(r['stop_sequence']),r['stop_id'],r.get('departure_time',''),r.get('pickup_type','0'),r.get('drop_off_type','0')))
     stops={r['stop_id']:r for r in network.get('stops',[])}
-    allowed=set()
+    allowed=set();allowed_edges=set()
     for p in network['patterns']:
         if p['route_id'] not in scope:continue
+        rules=p.get('stop_rules',[{}]*len(p['stop_ids']))
         for i,s in enumerate(p['stop_ids'][:-1]):
-            if p.get('stop_rules',[{}]*len(p['stop_ids']))[i].get('pickup_type','0')!='1':allowed.add((s,p['route_id'],p['stop_ids'][-1]))
+            if rules[i].get('pickup_type','0')!='1':allowed.add((s,p['route_id'],p['stop_ids'][-1]))
+            hop=next_visit(p['stop_ids'],rules,list(range(len(p['stop_ids']))),i,stops)
+            if hop:allowed_edges.add((p['route_id'],s,hop[0]))
     start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=4),dt.time(),TZ).timestamp())
     directions={line:{} for line in scope};groups={line:{} for line in scope};count=0;unmatched=0;trip_ids=sorted(rows)
     for tid in trip_ids:
@@ -88,7 +91,7 @@ def build(z,network,day):
                 time=instant(d,value)
                 if not start<=time<end:continue
                 key=(stop,trip['route_id'],destination)
-                if key not in allowed or (stops and nexts[number][0] not in stops):unmatched+=1;continue
+                if key not in allowed or (trip['route_id'],stop,nexts[number][0]) not in allowed_edges or (stops and nexts[number][0] not in stops):unmatched+=1;continue
                 directions[trip['route_id']][tripref]=trip_direction(trip)
                 encoded=json.dumps(key,separators=(',',':'));groups[trip['route_id']].setdefault(encoded,[]).append([time,str(d),tripref,number,*nexts[number]]);count+=1
     result={}
