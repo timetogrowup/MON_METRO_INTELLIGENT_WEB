@@ -1,0 +1,35 @@
+name: Vérifier les interfaces transport
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['index.html', '*.js', '*.css', 'tests/**', '.github/workflows/transport-interface.yml']
+permissions:
+  contents: read
+concurrency:
+  group: transport-interface
+  cancel-in-progress: true
+jobs:
+  browser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Installer les navigateurs
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium webkit
+      - name: Tester les interfaces sur les données qualifiées disponibles
+        run: |
+          python -m http.server 8765 > /tmp/wenare-interface-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for browser in chromium webkit; do
+            MMI_BROWSER=$browser node tests/test_browser.cjs
+            MMI_BROWSER=$browser node tests/test_departures_browser.cjs
+            MMI_BROWSER=$browser node tests/test_mobility_browser.cjs
+            MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
+          done
