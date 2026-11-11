@@ -103,3 +103,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: await github.rest.repos.requestPagesBuild({...context.repo});
+      - name: Vérifier le site après publication des horaires
+        if: steps.data.outputs.changed == 'true' && github.repository == 'timetogrowup/WENARE'
+        run: python monitoring/check_transport_health.py --deep --expected-root distribution --attempts 8 --delay 20
+      - name: Conserver le contrôle après publication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transport-publication-health-${{ github.run_id }}
+          path: transport-health.json
+          if-no-files-found: ignore
+          retention-days: 14
