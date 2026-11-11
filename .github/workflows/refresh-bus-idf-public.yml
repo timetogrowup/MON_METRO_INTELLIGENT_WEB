@@ -76,6 +76,8 @@ jobs:
       - name: Conserver les preuves
         if: always()
         uses: actions/upload-artifact@v4
+        timeout-minutes: 2
+        continue-on-error: true
         with:
           name: qualification-bus-idf-${{ github.run_id }}
           path: |
@@ -109,8 +111,11 @@ jobs:
       - name: Conserver le contrôle après publication
         if: always()
         uses: actions/upload-artifact@v4
+        timeout-minutes: 2
+        continue-on-error: true
         with:
           name: transport-publication-health-${{ github.run_id }}
           path: transport-health.json
           if-no-files-found: ignore
           retention-days: 14
+
