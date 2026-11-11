@@ -1,0 +1,66 @@
+name: Surveiller les horaires transport en production
+on:
+  schedule:
+    - cron: '43 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['monitoring/**', 'transport-health.js', '.github/workflows/transport-health.yml']
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: transport-production-health
+  cancel-in-progress: false
+jobs:
+  production-health:
+    if: github.repository == 'timetogrowup/WENARE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            monitoring
+            transport-health.js
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Vérifier les seuils de surveillance
+        run: |
+          python -m unittest discover -s monitoring -p 'test_*.py' -v
+          node monitoring/test_transport_health.cjs
+      - name: Contrôler les horaires réellement publiés
+        id: health
+        continue-on-error: true
+        run: python monitoring/check_transport_health.py
+      - name: Ouvrir ou résoudre l'alerte de production
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require('fs');
+            const title='[WENARE] Validité des horaires de transport';
+            const report=fs.existsSync('transport-health.json')?JSON.parse(fs.readFileSync('transport-health.json','utf8')):{healthy:false,error:'Le contrôle ne produit aucun résultat. Consulter cette exécution.'};
+            const issues=await github.paginate(github.rest.issues.listForRepo,{...context.repo,state:'open',creator:'github-actions[bot]',per_page:100});
+            const existing=issues.find(i=>!i.pull_request&&i.title===title);
+            const run=`https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            if(!report.healthy){
+              const body='Contrôle indépendant du site WENARE publié. Préalerte à moins de 18 heures de validité, ou incident si données expirées, invalides ou inaccessibles.\n\n```json\n'+JSON.stringify(report,null,2)+'\n```\n\nExécution : '+run;
+              if(existing)await github.rest.issues.update({...context.repo,issue_number:existing.number,body});
+              else await github.rest.issues.create({...context.repo,title,body});
+            }else if(existing){
+              await github.rest.issues.createComment({...context.repo,issue_number:existing.number,body:'Rétablissement vérifié sur le site publié : les deux jeux ont au moins 18 heures de validité. '+run});
+              await github.rest.issues.update({...context.repo,issue_number:existing.number,state:'closed',state_reason:'completed'});
+            }
+      - name: Conserver le résultat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transport-health-${{ github.run_id }}
+          path: transport-health.json
+          retention-days: 14
+      - name: Signaler un état dégradé
+        if: steps.health.outcome != 'success'
+        run: exit 1
