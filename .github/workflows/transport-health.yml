@@ -3,26 +3,34 @@ on:
   schedule:
     - cron: '43 * * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
   push:
     branches: [main]
     paths: ['monitoring/**', 'transport-health.js', '.github/workflows/transport-health.yml']
 permissions:
   contents: read
   issues: write
+  actions: write
 concurrency:
   group: transport-production-health
   cancel-in-progress: false
 jobs:
   production-health:
-    if: github.repository == 'timetogrowup/WENARE'
+    if: github.repository == 'timetogrowup/WENARE' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           sparse-checkout: |
             monitoring
             transport-health.js
+            /distribution/manifest.json
+            /distribution/timetable/manifest.json
+            /distribution/mobility/manifest.json
           sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5
         with:
@@ -34,7 +42,14 @@ jobs:
       - name: Contrôler les horaires réellement publiés
         id: health
         continue-on-error: true
-        run: python monitoring/check_transport_health.py
+        env:
+          POST_DEPLOYMENT: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          if [ "$POST_DEPLOYMENT" = "true" ]; then
+            python monitoring/check_transport_health.py --deep --expected-root distribution --attempts 3 --delay 20
+          else
+            python monitoring/check_transport_health.py --deep
+          fi
       - name: Ouvrir ou résoudre l'alerte de production
         if: always()
         uses: actions/github-script@v7
@@ -54,6 +69,23 @@ jobs:
               await github.rest.issues.createComment({...context.repo,issue_number:existing.number,body:'Rétablissement vérifié sur le site publié : les deux jeux ont au moins 18 heures de validité. '+run});
               await github.rest.issues.update({...context.repo,issue_number:existing.number,state:'closed',state_reason:'completed'});
             }
+      - name: Récupération contrôlée avant expiration
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require('fs');
+            const report=fs.existsSync('transport-health.json')?JSON.parse(fs.readFileSync('transport-health.json','utf8')):null;
+            const {data}=await github.rest.actions.listWorkflowRuns({...context.repo,workflow_id:'refresh-bus-idf-public.yml',per_page:10});
+            const runs=data.workflow_runs;
+            if(runs.some(r=>['queued','in_progress','waiting','pending','requested'].includes(r.status))){core.info('Actualisation déjà en cours');return;}
+            const last=runs[0];
+            const failed=last&&last.conclusion!=='success';
+            const degraded=report&&!report.healthy&&report.datasets.some(d=>d.state!=='healthy'&&d.state!=='unreachable');
+            if(!failed&&!degraded)return;
+            if(last&&Date.now()-Date.parse(last.created_at)<6*3600000){core.info('Délai de récupération de six heures actif');return;}
+            await github.rest.actions.createWorkflowDispatch({...context.repo,workflow_id:'refresh-bus-idf-public.yml',ref:'main'});
+            core.notice('Actualisation des horaires relancée avec tous les contrôles de qualité');
       - name: Conserver le résultat
         if: always()
         uses: actions/upload-artifact@v4
