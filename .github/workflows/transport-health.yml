@@ -86,13 +86,12 @@ jobs:
             if(last&&Date.now()-Date.parse(last.created_at)<6*3600000){core.info('Délai de récupération de six heures actif');return;}
             await github.rest.actions.createWorkflowDispatch({...context.repo,workflow_id:'refresh-bus-idf-public.yml',ref:'main'});
             core.notice('Actualisation des horaires relancée avec tous les contrôles de qualité');
-      - name: Conserver le résultat
+      - name: Conserver le résultat dans le résumé
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: transport-health-${{ github.run_id }}
-          path: transport-health.json
-          retention-days: 14
+        run: |
+          if [ -f transport-health.json ]; then
+            cat transport-health.json >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Signaler un état dégradé
         if: steps.health.outcome != 'success'
         run: exit 1
