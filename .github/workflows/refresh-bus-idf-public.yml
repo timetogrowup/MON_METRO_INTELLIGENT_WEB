@@ -73,18 +73,10 @@ jobs:
           node tests/test_journey.cjs
           node tests/test_replay.cjs
           node --test tests/test_departures.cjs tests/test_timetable.cjs tests/test_mobility.cjs tests/test_nearby.cjs
-      - name: Conserver les preuves
-        if: always()
-        uses: actions/upload-artifact@v4
-        timeout-minutes: 2
-        continue-on-error: true
-        with:
-          name: qualification-bus-idf-${{ github.run_id }}
-          path: |
-            distribution/manifest.json
-            distribution/timetable/manifest.json
-            distribution/mobility/manifest.json
-          retention-days: 14
+      - name: Résumer la qualification sans service d'archivage
+        run: |
+          echo '## Qualification des horaires' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Contrôles de données et tests de non-régression réussis. Les manifestes qualifiés accompagnent les fichiers publiés dans le dépôt.' >> "$GITHUB_STEP_SUMMARY"
       - name: Commit atomique des seules données qualifiées
         id: data
         run: |
@@ -108,14 +100,10 @@ jobs:
       - name: Vérifier le site après publication des horaires
         if: steps.data.outputs.changed == 'true' && github.repository == 'timetogrowup/WENARE'
         run: python monitoring/check_transport_health.py --deep --expected-root distribution --attempts 8 --delay 20
-      - name: Conserver le contrôle après publication
+      - name: Résumer le contrôle après publication
         if: always()
-        uses: actions/upload-artifact@v4
-        timeout-minutes: 2
-        continue-on-error: true
-        with:
-          name: transport-publication-health-${{ github.run_id }}
-          path: transport-health.json
-          if-no-files-found: ignore
-          retention-days: 14
-
+        run: |
+          if [ -f transport-health.json ]; then
+            echo '## Contrôle du site publié' >> "$GITHUB_STEP_SUMMARY"
+            cat transport-health.json >> "$GITHUB_STEP_SUMMARY"
+          fi
