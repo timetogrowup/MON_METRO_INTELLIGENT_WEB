@@ -102,4 +102,4 @@ $('demo').onchange=()=>{step=-1;previous=null;if(mode==='demo')mode='none';$('de
  document.getElementById('networkRollback').onclick=async()=>{try{const record=await MMIReference.rollback();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent=e.message}};
  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.info('Cache interface indisponible',e.message));
 })();
-</script></body></html>
+</script><script src="transport-health.js?v=1"></script></body></html>
