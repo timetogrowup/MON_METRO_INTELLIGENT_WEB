@@ -30,7 +30,7 @@ def build(z,source_lines,day,all_bus=False):
     agencies={r['agency_id']:r['agency_timezone'] for r in records(z,'agency')}
     for key,r in routes.items():
         if r['route_type']!=('2' if lines[key]['mode']=='rer' else '3') or agencies.get(r['agency_id'])!='Europe/Paris':raise ValueError('GTFS mode/timezone mismatch')
-    days=[day+dt.timedelta(days=i) for i in range(-7,2)]
+    days=[day+dt.timedelta(days=i) for i in range(-7,4)]
     calendars=list(records(z,'calendar')) if 'calendar.txt' in z.namelist() else []
     exceptions=list(records(z,'calendar_dates')) if 'calendar_dates.txt' in z.namelist() else []
     active={str(d):active_services(calendars,exceptions,d) for d in days};needed=set().union(*active.values())
@@ -39,7 +39,7 @@ def build(z,source_lines,day,all_bus=False):
     rows=collections.defaultdict(list)
     for r in records(z,'stop_times'):
         if r['trip_id'] in trips and r['trip_id'] not in freq:rows[r['trip_id']].append({k:r.get(k,'') for k in ('stop_id','stop_sequence','departure_time','pickup_type','drop_off_type')})
-    start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=2),dt.time(),TZ).timestamp())
+    start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=4),dt.time(),TZ).timestamp())
     bounds={'validFromUtc':dt.datetime.fromtimestamp(start,UTC).isoformat(),'validUntilUtc':dt.datetime.fromtimestamp(end,UTC).isoformat()}
     stops={r['stop_id']:r for r in records(z,'stops')}
     directions={k:{} for k in lines};groups={k:{} for k in lines};patterns={};used=set();omitted_conditional=0

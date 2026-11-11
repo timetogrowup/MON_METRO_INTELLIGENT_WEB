@@ -11,7 +11,7 @@ def check(root=pathlib.Path('distribution'),now=None):
     network=json.loads((root/'network.json').read_text());allowed={(s,p['route_id'],p['stop_ids'][-1]) for p in network['patterns'] for i,s in enumerate(p['stop_ids'][:-1]) if p.get('stop_rules',[{}]*len(p['stop_ids']))[i].get('pickup_type','0')!='1'}
     start=dt.datetime.fromisoformat(m['validFromUtc']);end=dt.datetime.fromisoformat(m['validUntilUtc']);generated=dt.datetime.fromisoformat(m['generatedAtUtc'])
     assert start<=now<end and 0<=(now-generated).total_seconds()<172800,'Expired or future timetable'
-    assert 0<(end-start).total_seconds()<=49*3600,'Invalid time window'
+    assert 0<(end-start).total_seconds()<=97*3600,'Invalid time window'
     points={s['stop_id']:s for s in network.get('stops',[])}
     next_edges=set()
     for pattern in network['patterns']:

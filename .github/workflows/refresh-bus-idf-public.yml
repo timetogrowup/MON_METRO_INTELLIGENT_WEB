@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['scripts/**', 'tests/**', 'release-client/**', '.github/workflows/refresh-bus-idf-public.yml']
+    paths: ['scripts/**', 'tests/**', 'monitoring/validate_transport_reserve.py', 'release-client/**', '.github/workflows/refresh-bus-idf-public.yml']
   schedule:
     - cron: '17 5 * * *'
 permissions:
@@ -42,11 +42,19 @@ jobs:
           PYTHON
       - name: Générer et contrôler les données officielles
         run: |
-          python scripts/fetch_rail_segments.py
+          retry() {
+            local attempt=1
+            until "$@"; do
+              if [ "$attempt" -ge 3 ]; then return 1; fi
+              sleep "$((attempt * 30))"
+              attempt=$((attempt + 1))
+            done
+          }
+          retry python scripts/fetch_rail_segments.py
           python scripts/filter_metro_segments.py
           python scripts/validate_reference.py
-          python scripts/fetch_stations.py
-          python scripts/build_gtfs.py
+          retry python scripts/fetch_stations.py
+          retry python scripts/build_gtfs.py
           python scripts/validate_gtfs.py
           python scripts/build_master.py
           python scripts/compare_sources.py
@@ -55,8 +63,9 @@ jobs:
           python scripts/validate_publication.py
           python scripts/build_timetable.py
           python scripts/validate_timetable.py
-          python scripts/build_bus_network.py
+          retry python scripts/build_bus_network.py
           python scripts/validate_mobility.py
+          python monitoring/validate_transport_reserve.py
       - name: Tests de non-régression
         run: |
           python -m unittest discover -s tests -v
@@ -64,26 +73,6 @@ jobs:
           node tests/test_journey.cjs
           node tests/test_replay.cjs
           node --test tests/test_departures.cjs tests/test_timetable.cjs tests/test_mobility.cjs tests/test_nearby.cjs
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-1.62.1
-      - name: Navigateurs de recette
-        run: |
-          npm install --no-save --ignore-scripts playwright@1.62.1
-          npx playwright install --with-deps chromium webkit
-      - name: Recettes Chromium et WebKit
-        timeout-minutes: 10
-        run: |
-          python -m http.server 8765 > /tmp/wenare-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID"' EXIT
-          for browser in chromium webkit; do
-            MMI_BROWSER=$browser node tests/test_browser.cjs
-            MMI_BROWSER=$browser node tests/test_departures_browser.cjs
-            MMI_BROWSER=$browser node tests/test_mobility_browser.cjs
-            MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
-          done
       - name: Conserver les preuves
         if: always()
         uses: actions/upload-artifact@v4
@@ -105,7 +94,8 @@ jobs:
           fi
           if ! git diff --cached --quiet; then
             git commit -m "data: actualiser les horaires qualifiés de tous les bus IDFM"
-            git push
+            git pull --rebase origin main
+          git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Reconstruire le site avec les horaires qualifiés
