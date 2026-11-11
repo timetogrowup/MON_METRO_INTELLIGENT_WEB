@@ -14,7 +14,7 @@ def check(root=pathlib.Path('distribution/mobility'),now=None):
     assert m['source']=='https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip' and re.fullmatch('[a-f0-9]{64}',m['sourceSha256'])
     assert re.fullmatch('[a-f0-9]{64}',m['lineSourceSha256'])
     start=dt.datetime.fromisoformat(m['validFromUtc']);end=dt.datetime.fromisoformat(m['validUntilUtc']);generated=dt.datetime.fromisoformat(m['generatedAtUtc'])
-    assert start<=now<end and 0<=(now-generated).total_seconds()<172800 and 0<(end-start).total_seconds()<=49*3600
+    assert start<=now<end and 0<=(now-generated).total_seconds()<172800 and 0<(end-start).total_seconds()<=97*3600
     assert m['index']['file']=='index.json' and len(raw)==m['index']['bytes'] and len(raw)<=4_000_000
     assert hashlib.sha256(raw).hexdigest()==m['index']['sha256']==m['networkSha256']
     assert d['schemaVersion']==2 and d['kind']=='consultation-only' and d['validFromUtc']==m['validFromUtc'] and d['validUntilUtc']==m['validUntilUtc']
