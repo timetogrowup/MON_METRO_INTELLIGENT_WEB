@@ -1,9 +1,10 @@
 {
-  "qualifiedDataCommit": "4c92388fd51bc07d7d082ae5b4745f5136f336c2",
-  "qualificationSourceCommit": "548c17f0450ca4ae93822dea546682fb55fe0bbe",
-  "qualificationRun": "https://github.com/timetogrowup/MON_METRO_INTELLIGENT_WEB/actions/runs/42474127590",
-  "serviceDate": "2026-11-08",
-  "indexSha256": "84f3ea83ce6b46300bbaf64556eccb59b445f46b8470868f407614f3233d89d7",
-  "validUntilUtc": "2026-11-09T23:00:00+00:00",
+  "qualifiedDataCommit": "d0f42ded21b405f7ba948ac63dc10ce1654e6248",
+  "qualificationSourceCommit": "2ac9fc15cce39c694ec38a7eb75326abc5b22d50",
+  "qualificationRun": "https://github.com/timetogrowup/WENARE/actions/runs/43087302651",
+  "serviceDate": "2026-11-11",
+  "indexSha256": "424025fb40b42c2f4da3942447fabd1d6b44ee228cedf14303558f079f1d5d8a",
+  "networkSha256": "f6c3fb1c5d648c1d8ce8193cd665c19bf6206ea04f154d3c3f5bd102741418c1",
+  "validUntilUtc": "2026-11-12T23:00:00+00:00",
   "directionVersion": 1
 }
