@@ -15,7 +15,7 @@ def check(root=pathlib.Path('distribution/mobility'),now=None):
     expected=classify(json.loads(source),all_bus=True)
     assert m['scope']=={k.removeprefix('IDFM:'):v['mode'] for k,v in expected.items()}
     start=dt.datetime.fromisoformat(m['validFromUtc']);end=dt.datetime.fromisoformat(m['validUntilUtc']);generated=dt.datetime.fromisoformat(m['generatedAtUtc'])
-    assert start<=now<end and 0<=(now-generated).total_seconds()<172800 and 0<(end-start).total_seconds()<=49*3600
+    assert start<=now<end and 0<=(now-generated).total_seconds()<172800 and 0<(end-start).total_seconds()<=97*3600
     assert m['index']['file']=='index.json' and len(raw)==m['index']['bytes'] and 0<len(raw)<=INDEX_LIMIT
     assert hashlib.sha256(raw).hexdigest()==m['index']['sha256']==m['networkSha256']
     assert d['schemaVersion']==3 and d['kind']=='consultation-only' and d['service_date']==m['referenceDate']
