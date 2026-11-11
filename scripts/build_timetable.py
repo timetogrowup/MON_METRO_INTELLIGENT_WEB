@@ -57,7 +57,7 @@ def build(z,network,day):
     if any(agencies.get(r['agency_id'])!='Europe/Paris' for r in routes.values()):raise ValueError('Unsupported agency timezone')
     calendars=list(records(z,'calendar')) if 'calendar.txt' in z.namelist() else []
     exceptions=list(records(z,'calendar_dates')) if 'calendar_dates.txt' in z.namelist() else []
-    days=[day+dt.timedelta(days=i) for i in range(-7,2)]
+    days=[day+dt.timedelta(days=i) for i in range(-7,4)]
     active={str(d):active_services(calendars,exceptions,d) for d in days}
     needed=set().union(*active.values())
     trips={r['trip_id']:r for r in records(z,'trips') if r['route_id'] in scope and r['service_id'] in needed}
@@ -72,7 +72,7 @@ def build(z,network,day):
         if p['route_id'] not in scope:continue
         for i,s in enumerate(p['stop_ids'][:-1]):
             if p.get('stop_rules',[{}]*len(p['stop_ids']))[i].get('pickup_type','0')!='1':allowed.add((s,p['route_id'],p['stop_ids'][-1]))
-    start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=2),dt.time(),TZ).timestamp())
+    start=int(dt.datetime.combine(day,dt.time(),TZ).timestamp());end=int(dt.datetime.combine(day+dt.timedelta(days=4),dt.time(),TZ).timestamp())
     directions={line:{} for line in scope};groups={line:{} for line in scope};count=0;unmatched=0;trip_ids=sorted(rows)
     for tid in trip_ids:
         seq=sorted(rows[tid]);trip=trips[tid]
