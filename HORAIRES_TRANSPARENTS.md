@@ -17,7 +17,12 @@ Des actualisations GitHub restaient en attente depuis le 11 novembre. La récup�
 - 3 tests de continuité : conservation pendant renouvellement, repli après échec, remplacement après succès.
 - Contrôle UI du panneau : valide, préalerte, expiré et réseau indisponible.
 - 7 tests Python de surveillance réussis.
-- Suite Python élargie : 37 réussites ; un test du référentiel bloqué par le fichier source non versionné `referentiel/metro_segments.geojson`, normalement généré dans le workflow.
-- Chromium local bloqué par les restrictions système de création de sockets. La recette navigateur reste à confirmer dans GitHub Actions.
+- Suite Python élargie : les 38 tests ont réussi dans la génération GitHub, après création du référentiel source requis.
+- Chromium local bloqué par les restrictions système de création de sockets. Dans GitHub Actions : six parcours de départs réussis (recherche manuelle, bus/RER, proximité, chacun dans Chromium et WebKit), ainsi que les tests de continuité et du panneau.
+- Le parcours de suivi métro a initialement échoué car les données de service du 11 novembre étaient périmées au 12 novembre ; une recette automatique après renouvellement des données a été ajoutée.
+- La génération des quatre jours et les tests de non-régression ont réussi le 12 novembre ; commit des données qualifiées `1b77df03fc66069c1431638ebc6a9930c7ae3b50`.
 
-Version du cache applicatif : v36. La vérification du déploiement et du renouvellement effectif des données reste nécessaire avant de déclarer la livraison en production terminée.
+Version du cache applicatif : v36. Publication de l’interface réussie et nouveau script vérifié sur le site public. Renouvellement des horaires terminé avec succès ; contrôle profond du site public réussi le 12 novembre à 14 h 40, heure de Paris, avec 81 heures de réserve et une échéance au 16 novembre à 00 h (2026-11-15T23:00:00Z). Exécution : https://github.com/timetogrowup/WENARE/actions/runs/43228220469 .
+
+Recette finale sur les nouvelles données : huit parcours navigateur réussis dans Chromium et WebKit, y compris le suivi métro précédemment bloqué par le référentiel périmé. Tests de continuité et panneau également réussis. Exécution : https://github.com/timetogrowup/WENARE/actions/runs/43229594623 .
+
