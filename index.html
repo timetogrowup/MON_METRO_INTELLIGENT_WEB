@@ -92,7 +92,7 @@ try{
 window.wenareStopLocation=stop;
 restoreReference();
 $('demo').onchange=()=>{step=-1;previous=null;if(mode==='demo')mode='none';$('demoStatus').textContent='Parcours changé, prêt pour simulation'};
-</script><script src="network.js?v=18"></script><script src="journey.js?v=18"></script><script src="journey-ui.js?v=18"></script><script src="departures.js?v=18"></script><script src="timetable.js?v=18"></script><script src="mobility.js?v=18"></script><script src="departures-ui.js?v=18"></script><script src="nearby.js?v=25"></script><script src="opportunities.js?v=25"></script><script src="walking.js?v=22"></script><script src="map-themes.js?v=30"></script><script src="vector-basemap.js?v=30"></script><script src="walking-ui.js?v=34"></script><script src="places-map.js?v=28"></script><script src="places-map-ui.js?v=34"></script><script src="opportunities-ui.js?v=34"></script><script src="theme-icons.js?v=31"></script><script src="styles-entry.js?v=33"></script><script src="theme-motion.js?v=34"></script><script src="nearby-ui.js?v=34"></script>
+</script><script src="network.js?v=18"></script><script src="journey.js?v=18"></script><script src="journey-ui.js?v=18"></script><script src="departures.js?v=18"></script><script src="timetable.js?v=18"></script><script src="mobility.js?v=18"></script><script src="departures-ui.js?v=18"></script><script src="nearby.js?v=25"></script><script src="opportunities.js?v=25"></script><script src="walking.js?v=22"></script><script src="map-themes.js?v=30"></script><script src="vector-basemap.js?v=30"></script><script src="walking-ui.js?v=34"></script><script src="places-map.js?v=28"></script><script src="places-map-ui.js?v=34"></script><script src="opportunities-ui.js?v=34"></script><script src="theme-icons.js?v=31"></script><script src="styles-entry.js?v=33"></script><script src="theme-motion.js?v=34"></script><script src="nearby-ui.js?v=36"></script>
 <script>
 (function(){
  const status=document.getElementById('networkStatus');
@@ -102,4 +102,4 @@ $('demo').onchange=()=>{step=-1;previous=null;if(mode==='demo')mode='none';$('de
  document.getElementById('networkRollback').onclick=async()=>{try{const record=await MMIReference.rollback();status.textContent=MMIReference.describe(record);window.mmiSetReference(record)}catch(e){status.textContent=e.message}};
  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.info('Cache interface indisponible',e.message));
 })();
-</script><script src="transport-health.js?v=1"></script></body></html>
+</script><script src="transport-health.js?v=2"></script></body></html>
