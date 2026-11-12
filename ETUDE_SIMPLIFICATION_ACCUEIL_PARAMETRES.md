@@ -1,6 +1,6 @@
 # Simplification de l’accueil et paramètres — étude du 12 novembre 2026
 
-Statut : développement réalisé ; validation en cours sur une branche de travail avant publication.
+Statut : développement réalisé et validé avant publication.
 
 ## Objectif
 Ouvrir directement WENARE sur l’écran principal : distances, domaines d’intérêt, carte et résultats. Supprimer l’étape du bandit manchot et remplacer le changement aléatoire d’apparence par un choix explicite dans les paramètres.
@@ -52,3 +52,10 @@ Conséquence : si la localisation est refusée ou indisponible, la recherche man
 3. Fixer la présentation Directions et retirer les autres options.
 4. Retirer le bloc manuel et ses dépendances devenues inutiles.
 5. Mettre à jour le cache, tester les parcours conservés et publier après validation.
+
+## Réalisation et validation
+Accueil direct, douze thèmes dans Paramètres avec mémorisation, présentation Directions seule, options manuelles et diagnostics retirés. Cache v37. Les anciennes préférences de présentation sont ignorées. La génération des données ne peut plus réinstaller le client de migration historique.
+
+60 tests Node réussis ; tests du panneau de santé réussis ; 14 parcours navigateur réussis (accueil et paramètres, proximité transport, opportunités, carte des lieux, identités visuelles, guidage et animations dans Chromium et WebKit). La recette inclut refus GPS, stockage indisponible, cache de départs hors réseau, clavier/Échap, retour de focus et largeur 320 px.
+
+Validation avant publication : https://github.com/timetogrowup/WENARE/actions/runs/43234611230 .
