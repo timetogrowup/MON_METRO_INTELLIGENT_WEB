@@ -9,7 +9,7 @@ class Regional(unittest.TestCase):
   rows.append(dict(extra,id_line='C99997',status='prochainement active'))
   rows.append(dict(extra,id_line='C99996',transportmode='tram'))
   selected=classify(rows,all_bus=True)
-  self.assertEqual(selected['IDFM:C99998']['mode'],'bus');self.assertNotIn('IDFM:C99997',selected);self.assertNotIn('IDFM:C99996',selected)
+  self.assertEqual(selected['IDFM:C99998']['mode'],'bus');self.assertNotIn('IDFM:C99997',selected);self.assertEqual(selected['IDFM:C99996']['mode'],'tram')
   self.assertEqual(selected['IDFM:C01072']['route_short_name'],selected['IDFM:C99998']['route_short_name'])
  def test_unavailable_official_line_is_catalogued_without_invented_departures(self):
   fixture=test_mobility.Mobility();rows=fixture.reference();rows.append(dict(rows[-1],id_line='C99998',name_line='20'))
