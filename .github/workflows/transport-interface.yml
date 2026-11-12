@@ -1,6 +1,9 @@
 name: Vérifier les interfaces transport
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Qualifier et actualiser les bus IDFM publics"]
+    types: [completed]
   push:
     branches: [main]
     paths: ['index.html', '*.js', '*.css', 'tests/**', '.github/workflows/transport-interface.yml']
@@ -11,6 +14,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   browser-tests:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
