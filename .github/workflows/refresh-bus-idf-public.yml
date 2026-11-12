@@ -60,7 +60,7 @@ jobs:
           node tests/test_network.cjs
           node tests/test_journey.cjs
           node tests/test_replay.cjs
-          node --test tests/test_departures.cjs tests/test_timetable.cjs tests/test_mobility.cjs tests/test_nearby.cjs tests/test_transport_modes.cjs
+          node --test tests/test_departures.cjs tests/test_timetable.cjs tests/test_mobility.cjs tests/test_nearby.cjs tests/test_transport_modes.cjs tests/test_line_colours.cjs
       - name: Résumer la qualification sans service d'archivage
         run: |
           echo '## Qualification des horaires' >> "$GITHUB_STEP_SUMMARY"
@@ -92,3 +92,4 @@ jobs:
             echo '## Contrôle du site publié' >> "$GITHUB_STEP_SUMMARY"
             cat transport-health.json >> "$GITHUB_STEP_SUMMARY"
           fi
+

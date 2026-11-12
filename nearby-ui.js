@@ -4,8 +4,10 @@ let sequence=0,controller=null,timer=null,tick=null,enabled=true,places=[],sourc
 let scanned=[],railScanned=[],railPlaces=[],loading=false,dataIssues=false;
 let candidates=[],radius=250,manualRadius=false;
 const expanded=new Set();
+let lineColours=new Map();
+function paintBadge(badge,lineId){return WenareLineColours.apply(badge,lineColours.get(lineId));}
 const icon=mode=>({metro:'Ⓜ',rer:'Ⓡ',bus:'🚌',tram:'Ⓣ',train:'🚆',ter:'🚆',shuttle:'🚈',cable:'🚡',funicular:'🚞'}[mode]||'🚏');
-function badge(service){const e=element('span',icon(service.mode)+' '+label(service.mode)+' '+service.lineName,'line-badge mode-'+service.mode);e.title=label(service.mode)+' '+service.lineName;return e;}
+function badge(service){const e=element('span',icon(service.mode)+' '+label(service.mode)+' '+service.lineName,'line-badge mode-'+service.mode);e.title=label(service.mode)+' '+service.lineName;return paintBadge(e,service.lineId);}
 function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' rail/câble':'');window.dispatchEvent(new CustomEvent('wenare:overview',{detail:{radius,manualRadius,enabled,transportCount:places.length+railPlaces.length,position:enabled?lastFix:null}}));}
 const label=mode=>({metro:'Métro',rer:'RER',bus:'Bus',tram:'Tram',train:'Transilien',ter:'TER',shuttle:'Navette',cable:'Câble',funicular:'Funiculaire'}[mode]||'Transport');
 const say=text=>{$('nearbyOverviewStatus').textContent=text;$('nearbyOverviewStatus').classList.toggle('is-error',/⚠|indisponible|Autorisez|imprécise|trop ancienne/i.test(text));};
@@ -32,7 +34,7 @@ function render(){
  const walk='🚶 ≈ '+core.walkingMinutes(place.distance)+' min';
  const visible=lines.slice(0,2),hiddenLines=lines.length-visible.length;
  if(hiddenLines){const extra=element('span','＋'+hiddenLines,'summary-extra');extra.title=hiddenLines+' autres lignes dans le détail';row1.insertBefore(extra,row1.lastChild);}
- function renderLine(row,line){row.classList.add('line-senses-row');row.dataset.lineId=line.lineId;const logo=element('span',(line.mode==='bus'?'':icon(line.mode)+' ')+line.lineName,'line-badge compact-line mode-'+line.mode);logo.title=label(line.mode)+' '+line.lineName;logo.setAttribute('aria-label',logo.title);row.append(logo);
+ function renderLine(row,line){row.classList.add('line-senses-row');row.dataset.lineId=line.lineId;const logo=element('span',(line.mode==='bus'?'':icon(line.mode)+' ')+line.lineName,'line-badge compact-line mode-'+line.mode);logo.title=label(line.mode)+' '+line.lineName;logo.setAttribute('aria-label',logo.title);row.append(paintBadge(logo,line.lineId));
   const known=line.directions.filter(g=>g.gtfsDirectionId==='0'||g.gtfsDirectionId==='1'),unknown=line.directions.filter(g=>g.gtfsDirectionId===null);
   const slots=known.length?['0','1'].map(id=>known.find(g=>g.gtfsDirectionId===id)||null):[unknown[0]||null,null];
   slots.forEach((direction,index)=>{if(!direction){const absent=element('span','—','sense-cell sense-empty');absent.dataset.gtfsDirectionId=String(index);absent.setAttribute('aria-label','Pas de départ annoncé dans ce sens dans les 60 minutes');row.append(absent);return;}
@@ -56,9 +58,9 @@ function render(){
 }
 async function catalogues(mine){
  const outputs=await Promise.allSettled([
- (async()=>{let record;try{record=await MMIReference.update();}catch{record=await MMIReference.read();}if(!record)throw new Error();return {mode:'metro',stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.sha256};})(),
- (async()=>{const record=await WenareMobility.load(controller.signal);return {record,mode:'extra',stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.networkSha256};})()
- ]);if(mine!==sequence)return null;sources={};stopIndex=new Map();const data=[];for(let i=0;i<outputs.length;i++){const r=outputs[i];if(r.status==='fulfilled'){sources[r.value.mode]=r.value;data.push(r.value.stations);for(const stop of r.value.stops)stopIndex.set(stop.stop_id,stop);}}
+ (async()=>{let record;try{record=await MMIReference.update();}catch{record=await MMIReference.read();}if(!record)throw new Error();return {mode:'metro',lines:record.data.lines,stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.sha256};})(),
+ (async()=>{const record=await WenareMobility.load(controller.signal);return {record,mode:'extra',lines:record.data.lines,stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.networkSha256};})()
+ ]);if(mine!==sequence)return null;sources={};stopIndex=new Map();lineColours=new Map();const data=[];for(let i=0;i<outputs.length;i++){const r=outputs[i];if(r.status==='fulfilled'){sources[r.value.mode]=r.value;for(const line of r.value.lines)lineColours.set(line.route_id,WenareLineColours.palette(line));data.push(r.value.stations);for(const stop of r.value.stops)stopIndex.set(stop.stop_id,stop);}}
  $('nearbyCoverage').textContent=(sources.extra?.record?.manifest.catalogueVersion===3?'Couverture : métro (16 lignes), '+Object.entries(sources.extra.record.manifest.qa.modeLines||{rer:5,bus:sources.extra.record.manifest.qa.busLines}).map(([mode,count])=>label(mode)+' : '+count).join(' · ')+'. Arrêts disposant de départs théoriques sur la période.':'Couverture : métro (16 lignes), RER A–E et cinq lignes de bus pilotes. Classement parmi les points couverts.')+(outputs.some(r=>r.status==='rejected')?' Certaines données sont indisponibles : propositions partielles.':'');return logic.mergePlaces(data);
 }
 let timetableReady=null;
@@ -95,3 +97,4 @@ controls();
  window.WenareOverview={refreshDomain(){if(!enabled||!lastFix||!candidates.length)return;cancel(false);loading=false;scanned=[];railScanned=[];controller=new AbortController();render();departures(sequence);}};
  start();
 })();
+

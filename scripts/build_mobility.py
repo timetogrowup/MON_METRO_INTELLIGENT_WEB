@@ -1,5 +1,5 @@
 """Regional transport consultation packages. Never changes metro schema."""
-import collections, datetime as dt, gzip, hashlib, json, pathlib, urllib.request, zipfile
+import re, collections, datetime as dt, gzip, hashlib, json, pathlib, urllib.request, zipfile
 from zoneinfo import ZoneInfo
 from build_gtfs import records, service_day, URL
 from build_timetable import active_services, instant, seconds, next_visit, trip_direction
@@ -28,6 +28,10 @@ def regional_mode(row):
         if row.get('transportsubmode')=='railShuttle':return 'shuttle'
     return None
 
+def colour(value):
+    value=str(value or '').strip().removeprefix('#')
+    return value.upper() if re.fullmatch('[a-fA-F0-9]{6}',value) else ''
+
 def classify(rows,all_bus=False):
     by_id={r['id_line']:r for r in rows};result={}
     scope=SCOPE if not all_bus else {**{k:'rer' for k in RER},**{r['id_line']:regional_mode(r) for r in rows if r['status']=='active' and regional_mode(r) is not None}}
@@ -36,7 +40,7 @@ def classify(rows,all_bus=False):
         if r['status']!='active':raise ValueError('Inactive scope line')
         if mode=='rer' and (r['transportmode']!='rail' or r['transportsubmode']!='local' or r['networkname']!='RER' or r['name_line']!=RER[identifier]):raise ValueError('Unproven RER classification')
         if mode=='bus' and (r['transportmode']!='bus' or (not all_bus and r['name_line']!=BUS[identifier])):raise ValueError('Unproven bus classification')
-        result['IDFM:'+identifier]={'route_id':'IDFM:'+identifier,'route_short_name':r['name_line'],'mode':mode,'operator':r['operatorname']}
+        result['IDFM:'+identifier]={'route_id':'IDFM:'+identifier,'route_short_name':r['name_line'],'mode':mode,'operator':r['operatorname'],'route_color':colour(r.get('colourweb_hexa')),'route_text_color':colour(r.get('textcolourweb_hexa'))}
     return result
 
 def build(z,source_lines,day,all_bus=False):
@@ -117,4 +121,5 @@ def main():
     (ROOT/'manifest.json').write_bytes(encoded(manifest));print('MOBILITY_BUILT',json.dumps({'indexBytes':len(index_raw),'packages':files,'qa':qa}))
 
 if __name__=='__main__':main()
+
 

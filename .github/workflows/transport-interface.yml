@@ -32,11 +32,12 @@ jobs:
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
           node monitoring/test_transport_health.cjs
-          node --test tests/test_refresh_continuity.cjs tests/test_themes.cjs
+          node --test tests/test_refresh_continuity.cjs tests/test_themes.cjs tests/test_line_colours.cjs
           failed=0
           for browser in chromium webkit; do
-            for suite in test_home_browser test_nearby_browser test_opportunities_browser test_places_map_browser test_theme_system_browser test_walking_browser test_motion_browser; do
+            for suite in test_line_colours_browser test_home_browser test_nearby_browser test_opportunities_browser test_places_map_browser test_theme_system_browser test_walking_browser test_motion_browser; do
               MMI_BROWSER=$browser node tests/$suite.cjs || failed=1
             done
           done
           exit "$failed"
+
