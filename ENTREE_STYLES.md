@@ -1,9 +1,9 @@
-# Entrée par rouleau de styles — 8 novembre 2026
+# Accueil direct et thèmes — 12 novembre 2026
 
-À chaque chargement, un rouleau vertical affiche les douze styles. Le clic ou Entrée/Espace verrouille le style visible, confirme pendant 650 ms puis ouvre WENARE. La localisation automatique attend cette entrée. Le bouton de thème relance le rouleau sans redémarrer le GPS.
+Le rouleau de styles et l’écran intermédiaire sont supprimés. L’application s’ouvre directement et demande la localisation selon les autorisations du navigateur.
 
-Palettes : Pop, Funk/Disco, Reggae, Rock, Jazz vintage, Électro/Dance, Bossa nova, Soul, Folk, Lo-fi/Jazz instrumental, Ambient, Swing électro. Couleurs, fonds, police, marque SVG et traitement des tuiles de carte sont adaptés. Les épingles, couleurs métiers et mentions OpenStreetMap restent lisibles et indépendantes du filtre des tuiles. Il s’agit de traitements du fond raster, pas de styles vectoriels ni des illustrations des maquettes.
+Le bouton engrenage Paramètres ouvre une fenêtre présentant les douze thèmes. Le choix est explicite, appliqué immédiatement et mémorisé sur l’appareil. À défaut de préférence valide, Pop est utilisé. Les paramètres ne relancent ni localisation ni chargement des résultats. Le clavier, Échap, le retour de focus et la réduction des animations restent pris en charge.
 
-Accessibilité : bouton natif clavier/tactile, contenu principal inert durant le choix, annonce du résultat uniquement, animation suspendue en arrière-plan. Avec réduction des animations système : style aléatoire fixe, sélection au clic sans défilement.
+Les départs utilisent uniquement la présentation Directions. Les commandes Me relocaliser et Arrêter restent disponibles. Les options manuelles, le suivi métro, les simulations et diagnostics ont été retirés de l’interface. Les contrôles de données, caches et renouvellements automatiques restent actifs. La carte et le guidage à pied sont conservés.
 
-Validation locale : syntaxe JavaScript et trois tests Node (sélection du style visible, clic unique, changement ultérieur sans seconde entrée, réduction des animations, garde GPS et assets hors ligne). Aucun essai physique GPS revendiqué.
+Modules : themes.js pour le catalogue et la restauration avant affichage ; settings.js/settings.css pour les paramètres. Cache interface v37.

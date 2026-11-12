@@ -1,6 +1,6 @@
 # Simplification de l’accueil et paramètres — étude du 12 novembre 2026
 
-Statut : expression de besoin et étude technique ; aucun développement de cette évolution à ce stade.
+Statut : développement réalisé ; validation en cours sur une branche de travail avant publication.
 
 ## Objectif
 Ouvrir directement WENARE sur l’écran principal : distances, domaines d’intérêt, carte et résultats. Supprimer l’étape du bandit manchot et remplacer le changement aléatoire d’apparence par un choix explicite dans les paramètres.

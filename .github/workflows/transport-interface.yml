@@ -5,12 +5,12 @@ on:
     workflows: ["Qualifier et actualiser les bus IDFM publics"]
     types: [completed]
   push:
-    branches: [main]
+    branches: [main, codex/simplification-accueil]
     paths: ['index.html', '*.js', '*.css', 'tests/**', '.github/workflows/transport-interface.yml']
 permissions:
   contents: read
 concurrency:
-  group: transport-interface
+  group: transport-interface-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   browser-tests:
@@ -32,10 +32,10 @@ jobs:
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
           node monitoring/test_transport_health.cjs
-          node --test tests/test_refresh_continuity.cjs
+          node --test tests/test_refresh_continuity.cjs tests/test_themes.cjs
           failed=0
           for browser in chromium webkit; do
-            for suite in test_browser test_departures_browser test_mobility_browser test_nearby_browser; do
+            for suite in test_home_browser test_nearby_browser test_opportunities_browser test_places_map_browser test_theme_system_browser test_walking_browser test_motion_browser; do
               MMI_BROWSER=$browser node tests/$suite.cjs || failed=1
             done
           done

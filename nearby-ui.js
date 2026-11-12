@@ -2,16 +2,15 @@
 const $=id=>document.getElementById(id),core=WenareDepartures,logic=WenareNearby;
 let sequence=0,controller=null,timer=null,tick=null,enabled=true,places=[],sources={},lastFix=null,results=new Map(),stopIndex=new Map();
 let scanned=[],railScanned=[],railPlaces=[],loading=false,dataIssues=false;
-let candidates=[],radius=250,manualRadius=false,view='balanced';
-const expanded=new Set(),views=['balanced','departure','directions'];
-try{const saved=localStorage.getItem('wenare-overview-view');if(views.includes(saved))view=saved;}catch{}
+let candidates=[],radius=250,manualRadius=false;
+const expanded=new Set();
 const icon=mode=>({metro:'Ⓜ',rer:'Ⓡ',bus:'🚌'}[mode]||'🚏');
 function badge(service){const e=element('span',icon(service.mode)+' '+label(service.mode)+' '+service.lineName,'line-badge mode-'+service.mode);e.title=label(service.mode)+' '+service.lineName;return e;}
-function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' métro/RER':'');window.dispatchEvent(new CustomEvent('wenare:overview',{detail:{radius,manualRadius,enabled,transportCount:places.length+railPlaces.length,position:enabled?lastFix:null}}));}
+function controls(){document.querySelectorAll('[data-radius]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.radius)===radius)));$('radiusStatus').textContent=(manualRadius?'📍':'✨ Auto ·')+' '+radius.toLocaleString('fr-FR')+' m · '+places.length+' point'+(places.length===1?'':'s')+(railPlaces.length?' · ＋'+railPlaces.length+' métro/RER':'');window.dispatchEvent(new CustomEvent('wenare:overview',{detail:{radius,manualRadius,enabled,transportCount:places.length+railPlaces.length,position:enabled?lastFix:null}}));}
 const label=mode=>({metro:'Métro',rer:'RER',bus:'Bus'}[mode]||'Transport');
 const say=text=>{$('nearbyOverviewStatus').textContent=text;$('nearbyOverviewStatus').classList.toggle('is-error',/⚠|indisponible|Autorisez|imprécise|trop ancienne/i.test(text));};
 function cancel(clear=true){sequence++;controller?.abort();controller=null;clearTimeout(timer);clearInterval(tick);timer=tick=null;if(clear){places=[];railPlaces=[];scanned=[];railScanned=[];loading=false;results.clear();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=true;}controls();}
-function fallback(text){enabled=false;say(text);$('manualOptions').open=true;}
+function fallback(text){enabled=false;say(text);}
 function element(tag,text,className){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;}
 function groupsFor(place,wall=Date.now(),mono=performance.now()){
  const observations=[];for(const service of place.services){const row=results.get(service.key);if(!row)continue;if(row.error){dataIssues=true;continue;}const now=row.clock.server+mono-row.clock.mono;if(Math.abs((wall-row.clock.wall)-(mono-row.clock.mono))>30000||now>=Date.parse(row.response.validUntilUtc)){dataIssues=true;continue;}for(const event of row.response.departures){const view=core.presentation(event,now);if(logic.imminent(view,now))observations.push({service,event,view});}}
@@ -21,10 +20,10 @@ function select(){dataIssues=false;const wall=Date.now(),mono=performance.now(),
 function render(){
  select();const focusedPlace=document.activeElement?.classList.contains('place-summary')?document.activeElement.dataset.placeId:null;controls();$('nearbyCards').replaceChildren();$('railCards').replaceChildren();$('railOverview').hidden=!railPlaces.length;if(!places.length&&lastFix&&enabled)$('nearbyCards').append(element('p',loading?'⏳ Recherche des départs dans les 60 minutes…':dataIssues?'⚠ Horaires indisponibles ou expirés. Réessayez avec une connexion.':'🔎 Aucun départ dans les 60 minutes à moins de '+radius.toLocaleString('fr-FR')+' m.','nearby-empty'));const nowWall=Date.now(),nowMono=performance.now();
  for(const {i,place,target,prefix} of [...places.map((place,i)=>({place,i,target:'nearbyCards',prefix:'place'})),...railPlaces.map((place,i)=>({place,i,target:'railCards',prefix:'rail'}))]){
- const card=element('article',undefined,'departure-place');card.dataset.view=view;
+ const card=element('article',undefined,'departure-place');card.dataset.view='directions';
  const groups=place.groups,lineStates=new Map(place.services.map(service=>[service.lineId,{service}])),partial=dataIssues,list=element('ul',undefined,'all-departures'),shown=new Set();
  for(const group of groups){shown.add(group.lineId);const li=element('li'),name=element('div',undefined,'departure-service');li.dataset.lineId=group.lineId;name.append(badge(group),element('span',(group.gtfsDirectionId===null?'Sens non renseigné · ':'')+'→ '+group.nextName));li.append(name);const times=element('p',undefined,'departure-times');group.events.forEach((item,j)=>times.append(element('span',(j?'Puis ':'')+item.view.label.toLocaleLowerCase('fr')+' → '+(item.event.destinationName||'Destination non renseignée')+' · '+new Date(item.view.time).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}))));if(group.events.length===1)times.append(element('span','Puis : aucun dans les 60 min'));li.append(times);list.append(li);}
- const lines=logic.lineRows(groups).sort(view==='departure'?(a,b)=>a.nextTime-b.nextTime:view==='balanced'?(a,b)=>['metro','rer','bus'].indexOf(a.mode)-['metro','rer','bus'].indexOf(b.mode)||a.lineName.localeCompare(b.lineName,'fr',{numeric:true}):(a,b)=>a.lineName.localeCompare(b.lineName,'fr',{numeric:true}));
+ const lines=logic.lineRows(groups).sort((a,b)=>a.lineName.localeCompare(b.lineName,'fr',{numeric:true}));
  const summary=element('button',undefined,'place-summary'),detailId=prefix+'-detail-'+i,open=expanded.has(place.id);
  summary.type='button';summary.dataset.placeId=place.id;summary.setAttribute('aria-expanded',String(open));summary.setAttribute('aria-controls',detailId);
  const row1=element('span',undefined,'summary-row place-heading'),title=element('h2',place.name,'place-name');title.title=place.name;
@@ -57,7 +56,7 @@ function render(){
 }
 async function catalogues(mine){
  const outputs=await Promise.allSettled([
- (async()=>{let record;try{record=await MMIReference.update();}catch{record=await MMIReference.read();}if(!record)throw new Error();if(mine===sequence)window.mmiSetReference?.(record);return {mode:'metro',stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.sha256};})(),
+ (async()=>{let record;try{record=await MMIReference.update();}catch{record=await MMIReference.read();}if(!record)throw new Error();return {mode:'metro',stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.sha256};})(),
  (async()=>{const record=await WenareMobility.load(controller.signal);return {record,mode:'extra',stations:core.catalogue(record.data),stops:record.data.stops,sha:record.manifest.networkSha256};})()
  ]);if(mine!==sequence)return null;sources={};stopIndex=new Map();const data=[];for(let i=0;i<outputs.length;i++){const r=outputs[i];if(r.status==='fulfilled'){sources[r.value.mode]=r.value;data.push(r.value.stations);for(const stop of r.value.stops)stopIndex.set(stop.stop_id,stop);}}
  $('nearbyCoverage').textContent=(sources.extra?.record?.manifest.catalogueVersion===3?'Couverture : métro (16 lignes), RER A–E et '+sources.extra.record.manifest.qa.busLines+' lignes de bus au catalogue Île-de-France. Arrêts disposant de départs théoriques sur la période.':'Couverture : métro (16 lignes), RER A–E et cinq lignes de bus pilotes. Classement parmi les points couverts.')+(outputs.some(r=>r.status==='rejected')?' Certaines données sont indisponibles : propositions partielles.':'');return logic.mergePlaces(data);
@@ -81,23 +80,19 @@ async function departures(mine){if(mine!==sequence||document.hidden||loading)ret
  $('nearbyOverviewAge').textContent='Position reçue à '+new Date(lastFix.timestamp).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' · précision ±'+Math.round(lastFix.coords.accuracy)+' m'+(lastFix.coords.accuracy>100?' · l’ordre des points proches peut être incertain.':'')+(Array.from(results.values()).some(r=>r.response?.clockSource==='device')?' · horaires calculés avec l’horloge de l’appareil.':'');
  clearInterval(tick);tick=setInterval(()=>{render();if(!loading&&((places.length<3&&(scanned.length<candidates.filter(p=>p.distance<=radius).length||(!manualRadius&&!places.length&&radius<3000)))||(railPlaces.length<3&&railScanned.length<candidates.filter(p=>p.distance<=radius&&p.services.some(s=>s.mode==='metro'||s.mode==='rer')).length)))departures(sequence);},1000);clearTimeout(timer);timer=setTimeout(()=>{if(enabled&&!document.hidden)start(true);},60000);
 }
-async function start(silent=false){silent=silent===true&&!!lastFix&&!!candidates.length;if(window.WenareEntry&&!window.WenareEntry.opened)return;window.dispatchEvent(new Event('wenare:restart'));enabled=true;$('manualOptions').open=false;cancel(!silent);loading=false;if(document.hidden)return;controller=new AbortController();const mine=sequence;if(!silent){say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';}
+async function start(silent=false){silent=silent===true&&!!lastFix&&!!candidates.length;window.dispatchEvent(new Event('wenare:restart'));enabled=true;cancel(!silent);loading=false;if(document.hidden)return;controller=new AbortController();const mine=sequence;if(!silent){say('Wenare vous localise et prépare vos départs…');$('nearbyOverviewAge').textContent='';}
  const catalogue=catalogues(mine);
- if(!navigator.geolocation){fallback('Localisation indisponible sur cet appareil. La recherche manuelle reste disponible.');return;}
- let position;try{position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}));}catch(error){if(mine===sequence)fallback(error.code===1?'Autorisez la localisation pour voir vos départs automatiquement. Vous pouvez aussi rechercher un arrêt manuellement.':'Position indisponible. La recherche manuelle reste disponible.');return;}
- if(mine!==sequence)return;if(!logic.validPosition(position.coords,position.timestamp)){fallback('Position trop ancienne ou imprécise. Réessayez ou recherchez un arrêt manuellement.');return;}lastFix=position;const stations=await catalogue;if(mine!==sequence||!stations)return;if(!stations.length){fallback('Données indisponibles pour proposer des départs. La recherche manuelle reste disponible.');return;}
+ if(!navigator.geolocation){fallback('Localisation indisponible sur cet appareil. Appuyez sur « Me relocaliser » pour réessayer.');return;}
+ let position;try{position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}));}catch(error){if(mine===sequence)fallback(error.code===1?'Autorisez la localisation pour voir vos départs automatiquement. Autorisez-la dans les paramètres du navigateur, puis appuyez sur « Me relocaliser ».':'Position indisponible. Appuyez sur « Me relocaliser » pour réessayer.');return;}
+ if(mine!==sequence)return;if(!logic.validPosition(position.coords,position.timestamp)){fallback('Position trop ancienne ou imprécise. Appuyez sur « Me relocaliser » pour réessayer.');return;}lastFix=position;const stations=await catalogue;if(mine!==sequence||!stations)return;if(!stations.length){fallback('Données indisponibles pour proposer des départs. Appuyez sur « Me relocaliser » pour réessayer.');return;}
  if(!silent)results.clear();else for(const row of results.values())row.refreshPending=true;scanned=[];railScanned=[];candidates=core.nearby(stations,{lat:position.coords.latitude,lon:position.coords.longitude},stations.length);if(!silent){places=[];render();say('Vos points de départ sont trouvés. Chargement des horaires de toutes les lignes…');}await departures(mine);
 }
 document.querySelectorAll('[data-radius]').forEach(button=>button.onclick=async()=>{if(!lastFix||!enabled||!candidates.length)return;manualRadius=true;radius=Number(button.dataset.radius);cancel();controller=new AbortController();places=[];render();say('Chargement des horaires dans le rayon choisi…');await departures(sequence);});
-document.querySelectorAll('button[data-view]').forEach(button=>button.onclick=()=>{view=button.dataset.view;try{localStorage.setItem('wenare-overview-view',view);}catch{}render();});
 controls();
 $('nearbyRestart').onclick=start;$('nearbyPause').onclick=()=>{enabled=false;cancel();say('Localisation et actualisation arrêtées.');$('nearbyOverviewAge').textContent='';};
-$('manualOptions').addEventListener('toggle',()=>{if($('manualOptions').open&&enabled){enabled=false;cancel();say('Options manuelles ouvertes · actualisation automatique suspendue.');}});
-$('eraseNetwork').addEventListener('click',()=>{enabled=false;cancel();say('Données locales effacées. Relancez la localisation pour les recharger.');});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancel();say('Consultation suspendue pendant votre absence.');}else if(enabled)start();});
  window.addEventListener('online',()=>{if(enabled&&!document.hidden)start(true);});
  window.addEventListener('pageshow',event=>{if(event.persisted&&enabled)start();});
  window.WenareOverview={refreshDomain(){if(!enabled||!lastFix||!candidates.length)return;cancel(false);loading=false;scanned=[];railScanned=[];controller=new AbortController();render();departures(sequence);}};
- window.addEventListener('wenare:enter',start,{once:true});
- if(!window.WenareEntry||window.WenareEntry.opened)start();
+ start();
 })();

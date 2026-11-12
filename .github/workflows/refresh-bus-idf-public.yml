@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['scripts/**', 'tests/**', 'monitoring/validate_transport_reserve.py', 'release-client/**', '.github/workflows/refresh-bus-idf-public.yml']
+    paths: ['scripts/**', 'tests/**', 'monitoring/validate_transport_reserve.py', '.github/workflows/refresh-bus-idf-public.yml']
   schedule:
     - cron: '17 5 * * *'
 permissions:
@@ -28,18 +28,6 @@ jobs:
         with:
           path: .cache
           key: public-idfm-gtfs-${{ runner.os }}-${{ steps.day.outputs.value }}
-      - name: Préparer la migration initiale sans activer le client en ligne
-        id: migration
-        run: |
-          python - <<'PYTHON'
-          import json,os,pathlib,shutil
-          m=json.loads(pathlib.Path('distribution/mobility/manifest.json').read_text())
-          initial=m.get('catalogueVersion')!=3 or m.get('directionVersion')!=1
-          if initial:
-              for p in pathlib.Path('release-client').iterdir():
-                  if p.is_file():shutil.copyfile(p,pathlib.Path(p.name))
-          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('initial='+str(initial).lower()+'\n')
-          PYTHON
       - name: Générer et contrôler les données officielles
         run: |
           retry() {
@@ -83,9 +71,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add distribution/
-          if [ "${{ steps.migration.outputs.initial }}" = "true" ]; then
-            git add index.html sw.js mobility.js departures.js departures-ui.js nearby-ui.js nearby.js timetable.js
-          fi
           if ! git diff --cached --quiet; then
             git commit -m "data: actualiser les horaires qualifiés de tous les bus IDFM"
             git pull --rebase origin main

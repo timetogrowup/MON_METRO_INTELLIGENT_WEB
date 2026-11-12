@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['theme-*', 'tests/test_motion*', 'tests/test_theme*', 'map-themes*', 'vector-basemap*', 'styles-entry*', 'tests/test_vector*', 'tests/test_map_themes*', 'places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
+    paths: ['theme-*', 'tests/test_motion*', 'tests/test_theme*', 'map-themes*', 'vector-basemap*', 'settings*', 'themes.js', 'tests/test_vector*', 'tests/test_map_themes*', 'places-map*', 'tests/test_places_map*', 'walking*', 'vendor/leaflet/**', 'tests/test_walking*', 'opportunities*', 'google-food*', 'google-cloud-guide.html', 'tests/test_google_food*', 'index.html', 'nearby-ui.js', 'tests/test_opportunities*', 'scripts/build_opportunities.py', '.github/workflows/opportunities.yml']
   schedule:
     - cron: '47 5 * * *'
 permissions:
