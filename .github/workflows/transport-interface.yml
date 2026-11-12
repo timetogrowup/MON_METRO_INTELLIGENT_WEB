@@ -27,9 +27,12 @@ jobs:
           python -m http.server 8765 > /tmp/wenare-interface-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
+          node monitoring/test_transport_health.cjs
+          node --test tests/test_refresh_continuity.cjs
+          failed=0
           for browser in chromium webkit; do
-            MMI_BROWSER=$browser node tests/test_browser.cjs
-            MMI_BROWSER=$browser node tests/test_departures_browser.cjs
-            MMI_BROWSER=$browser node tests/test_mobility_browser.cjs
-            MMI_BROWSER=$browser node tests/test_nearby_browser.cjs
+            for suite in test_browser test_departures_browser test_mobility_browser test_nearby_browser; do
+              MMI_BROWSER=$browser node tests/$suite.cjs || failed=1
+            done
           done
+          exit "$failed"
