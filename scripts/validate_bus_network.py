@@ -51,5 +51,7 @@ def check(root=pathlib.Path('distribution/mobility'),now=None):
         assert len(p['groups'])==meta['groups']==m['qa']['lines'][line]['groups'] and count==m['qa']['lines'][line]['departures'];total+=count
     assert actual==allowed and coverage==m['qa']['coverage']
     assert m['qa']['busLines']==sum(v['mode']=='bus' for v in expected.values())
+    if 'modeLines' in m['qa']:
+        assert m['qa']['modeLines']=={mode:sum(v['mode']==mode for v in expected.values()) for mode in {v['mode'] for v in expected.values()}}
     return {'lines':len(expected),'busLines':m['qa']['busLines'],'places':len(places),'departures':total,'coverage':coverage,'indexBytes':len(raw),'validUntilUtc':m['validUntilUtc']}
 if __name__=='__main__':print('BUS_IDF_VALID',json.dumps(check()))

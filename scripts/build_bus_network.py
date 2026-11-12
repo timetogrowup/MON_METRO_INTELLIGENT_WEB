@@ -1,4 +1,4 @@
-"""All officially active IDFM buses + RER; compact catalogue, lazy per-line schedules."""
+"""All supported officially active IDFM transport modes; compact catalogue, lazy per-line schedules."""
 import datetime as dt, gzip, hashlib, json, pathlib, urllib.request, zipfile
 from build_gtfs import records, service_day, URL
 from build_mobility import build, classify, encoded, digest, LINE_URL, UTC
@@ -35,7 +35,8 @@ def main():
         if len(b)>8_000_000:raise ValueError('Line package exceeds budget '+line)
         (ROOT/name).write_bytes(b);files[line]={'file':name,'bytes':len(b),'sha256':digest(b),'groups':len(p['groups'])}
     qa['coverage']={state:sum(s==state for s in statuses.values()) for state in set(statuses.values())}
-    qa['busLines']=sum(v['mode']=='bus' for v in lines.values())
+    qa['modeLines']={mode:sum(v['mode']==mode for v in lines.values()) for mode in sorted({v['mode'] for v in lines.values()})}
+    qa['busLines']=qa['modeLines'].get('bus',0)
     m={'directionVersion':1,'schemaVersion':2,'catalogueVersion':3,'quality':'timetable','source':URL,
        'attribution':'Île-de-France Mobilités — GTFS (Licence Mobilité) et référentiel des lignes (ODbL)',
        'sourcePage':'https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/',
@@ -46,7 +47,7 @@ def main():
        'generatedAtUtc':dt.datetime.now(UTC).isoformat(),'referenceDate':str(day),
        'validFromUtc':index['validFromUtc'],'validUntilUtc':index['validUntilUtc'],
        'lines':files,'scope':{k.removeprefix('IDFM:'):v['mode'] for k,v in lines.items()},'qa':qa,
-       'limitations':['All active official bus lines catalogued; only dated GTFS departures can be displayed.',
+       'limitations':['Active official bus, RER, tram, Transilien, TER, airport shuttle, cableway and funicular lines catalogued; only dated GTFS departures can be displayed.',
                        'No live information or disruptions. Conditional boarding and frequency services omitted.']}
     (ROOT/'manifest.json').write_bytes(encoded(m))
     print('BUS_IDF_BUILT',json.dumps({'busLines':qa['busLines'],'coverage':qa['coverage'],'indexBytes':len(payload),'places':len(index['packed']['stations']),'departures':sum(v['departures'] for v in qa['lines'].values())}))

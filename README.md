@@ -31,3 +31,8 @@ Adresse publique : https://timetogrowup.github.io/WENARE/ . Six distances sur un
 
 ## Carte des lieux — 8 novembre 2026
 Accès Carte sous les rayons, dix catégories colorées, mêmes lieux et filtres que la liste, groupes consultables, fiches et accès au guidage à pied. Rotation tactile, nord et recentrage. Détails et validation : [CARTE_LIEUX.md](CARTE_LIEUX.md). Cache interface v26.
+
+## Tous les modes de transport — 12 novembre 2026
+Les données régionales incluent désormais les lignes actives du référentiel IDFM : tramways et tram-trains, Transilien, TER présents dans le flux, navettes Orlyval/CDGVAL, câble et funiculaire, en complément du métro, des RER et des bus. La classification repose sur le mode et le sous-mode officiels. Chaque ligne conserve son identifiant, ses sens GTFS et les terminus par départ.
+
+Les nouveaux modes apparaissent dans les points proches et dans la section complémentaire sans bus. Seuls les départs datés exploitables sont proposés ; les services à fréquence ou sans horaire daté ne reçoivent pas de compte à rebours inventé. La couverture par mode est comptabilisée dans le manifeste. Le suivi embarqué reste limité au métro.

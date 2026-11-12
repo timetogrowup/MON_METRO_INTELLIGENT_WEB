@@ -1,4 +1,4 @@
-"""Separate, bounded RER/bus consultation packages. Never changes metro schema."""
+"""Regional transport consultation packages. Never changes metro schema."""
 import collections, datetime as dt, gzip, hashlib, json, pathlib, urllib.request, zipfile
 from zoneinfo import ZoneInfo
 from build_gtfs import records, service_day, URL
@@ -13,9 +13,24 @@ TZ=ZoneInfo('Europe/Paris');UTC=dt.timezone.utc
 
 def encoded(value):return (json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n').encode()
 def digest(raw):return hashlib.sha256(raw).hexdigest()
+# Official line modes remain authoritative; names and GTFS rail codes alone
+# cannot distinguish RER, Transilien, TER and airport shuttles.
+GTFS_TYPES={'rer':{'2'},'bus':{'3'},'tram':{'0'},'train':{'2'},
+            'ter':{'2'},'shuttle':{'0','2'},'cable':{'6'},'funicular':{'7'}}
+def regional_mode(row):
+    mode=row['transportmode']
+    if mode in {'bus','tram','cableway','funicular'}:
+        return {'cableway':'cable'}.get(mode,mode)
+    if mode=='rail':
+        if row['id_line'] in RER:return 'rer'
+        if row.get('transportsubmode')=='suburbanRailway' and row.get('networkname')=='Transilien':return 'train'
+        if row.get('transportsubmode')=='regionalRail' and row.get('networkname')=='TER':return 'ter'
+        if row.get('transportsubmode')=='railShuttle':return 'shuttle'
+    return None
+
 def classify(rows,all_bus=False):
     by_id={r['id_line']:r for r in rows};result={}
-    scope=SCOPE if not all_bus else {**{k:'rer' for k in RER},**{r['id_line']:'bus' for r in rows if r['status']=='active' and r['transportmode']=='bus'}}
+    scope=SCOPE if not all_bus else {**{k:'rer' for k in RER},**{r['id_line']:regional_mode(r) for r in rows if r['status']=='active' and regional_mode(r) is not None}}
     for identifier,mode in scope.items():
         r=by_id[identifier]
         if r['status']!='active':raise ValueError('Inactive scope line')
@@ -29,7 +44,7 @@ def build(z,source_lines,day,all_bus=False):
     if not all_bus and set(routes)!=set(lines):raise ValueError('Missing pilot line in GTFS')
     agencies={r['agency_id']:r['agency_timezone'] for r in records(z,'agency')}
     for key,r in routes.items():
-        if r['route_type']!=('2' if lines[key]['mode']=='rer' else '3') or agencies.get(r['agency_id'])!='Europe/Paris':raise ValueError('GTFS mode/timezone mismatch')
+        if r['route_type'] not in GTFS_TYPES[lines[key]['mode']] or agencies.get(r['agency_id'])!='Europe/Paris':raise ValueError('GTFS mode/timezone mismatch')
     days=[day+dt.timedelta(days=i) for i in range(-7,4)]
     calendars=list(records(z,'calendar')) if 'calendar.txt' in z.namelist() else []
     exceptions=list(records(z,'calendar_dates')) if 'calendar_dates.txt' in z.namelist() else []
